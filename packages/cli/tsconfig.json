@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@party-kit/core": ["../core/src"]
+    }
+  },
+  "include": ["src/**/*"]
+}

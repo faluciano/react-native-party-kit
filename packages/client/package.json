@@ -1,0 +1,25 @@
+{
+  "name": "@party-kit/client",
+  "version": "0.0.1",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser",
+    "test": "bun test",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@party-kit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "react": "^18.2.0",
+    "typescript": "^5.4.0",
+    "eslint": "^8.57.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  }
+}

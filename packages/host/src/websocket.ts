@@ -127,6 +127,7 @@ export class GameWebSocketServer extends EventEmitter {
   }
 
   private generateAcceptKey(key: string): string {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const crypto = require('crypto');
     const sha1 = crypto.createHash('sha1');
     sha1.update(key + GUID);

@@ -15,7 +15,9 @@ interface WebSocketConfig {
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
 export class GameWebSocketServer extends EventEmitter {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   private server: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private clients: Map<string, any>;
   private port: number;
 
@@ -25,7 +27,9 @@ export class GameWebSocketServer extends EventEmitter {
     this.clients = new Map();
   }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   public start() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.server = TcpSocket.createServer((socket: any) => {
       let buffer = Buffer.alloc(0);
 
@@ -81,7 +85,7 @@ export class GameWebSocketServer extends EventEmitter {
     }
   }
 
-  public send(socketId: string, data: any) {
+  public send(socketId: string, data: unknown) {
     const socket = this.clients.get(socketId);
     if (socket) {
       const frame = this.encodeFrame(JSON.stringify(data));
@@ -89,7 +93,7 @@ export class GameWebSocketServer extends EventEmitter {
     }
   }
 
-  public broadcast(data: any, excludeId?: string) {
+  public broadcast(data: unknown, excludeId?: string) {
     const frame = this.encodeFrame(JSON.stringify(data));
     this.clients.forEach((socket, id) => {
       if (id !== excludeId) {
@@ -100,6 +104,7 @@ export class GameWebSocketServer extends EventEmitter {
 
   // --- Private Helpers ---
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleHandshake(socket: any, header: string) {
     const keyMatch = header.match(/Sec-WebSocket-Key: (.+)/);
     if (!keyMatch) {
@@ -134,6 +139,7 @@ export class GameWebSocketServer extends EventEmitter {
     return sha1.digest('base64');
   }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   private decodeFrame(buffer: Buffer): any {
     // Basic decoding implementation (Masked frames from client)
     if (buffer.length < 2) return null;

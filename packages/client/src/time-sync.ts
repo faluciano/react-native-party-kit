@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageTypes, type ClientMessage, type HostMessage } from '@party-kit/core';
+import { MessageTypes } from '@party-kit/core';
 
 interface TimeSyncState {
   offset: number;  // Difference between server time and local time

@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useReducer, useRef } from 
 import { GameWebSocketServer } from './websocket';
 import { useStaticServer } from './server';
 import { 
-  createGameReducer, 
   MessageTypes, 
   type IGameState, 
   type IAction, 
@@ -27,6 +26,7 @@ interface GameHostContextValue<S extends IGameState, A extends IAction> {
 }
 
 // Create Context with 'any' fallback because Context generics are tricky in React
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const GameHostContext = createContext<GameHostContextValue<any, any> | null>(null);
 
 export function GameHostProvider<S extends IGameState, A extends IAction>({ 

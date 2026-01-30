@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import WebSocket from 'ws';
-import ora from 'ora';
 import { MessageTypes } from '@party-kit/core';
 
 export const simulateCommand = new Command('simulate')
@@ -16,13 +15,11 @@ export const simulateCommand = new Command('simulate')
     console.log(`🤖 Spawning ${count} bots connecting to ${url}...`);
     
     const bots: WebSocket[] = [];
-    let active = 0;
 
     for (let i = 0; i < count; i++) {
         const ws = new WebSocket(url);
         
         ws.on('open', () => {
-            active++;
             console.log(`[Bot ${i}] Connected`);
             
             // Join
@@ -43,7 +40,6 @@ export const simulateCommand = new Command('simulate')
         });
 
         ws.on('close', () => {
-            active--;
             console.log(`[Bot ${i}] Disconnected`);
         });
 

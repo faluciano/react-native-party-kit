@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useReducer } from 'react';
-import { MessageTypes, type ClientMessage, type HostMessage, type IGameState, type IAction } from '@party-kit/core';
+import { MessageTypes, type HostMessage, type IGameState, type IAction } from '@party-kit/core';
 import { useServerTime } from './time-sync';
 
 // Reconnection Constants

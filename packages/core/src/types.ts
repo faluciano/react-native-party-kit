@@ -13,7 +13,7 @@ export interface IGameState {
 
 export interface IAction {
   type: string;
-  payload?: any;
+  payload?: unknown;
   playerId?: string;
   timestamp?: number;
 }

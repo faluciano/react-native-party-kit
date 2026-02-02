@@ -160,7 +160,7 @@ bun run --filter @party-kit/host build
 
 ### 3. Testing in a Real App (Yalc)
 
-To test your local changes in a real React Native app, we recommend using `yalc` to link the packages locally.
+To test your local changes in a real React Native app, we recommend using `yalc`. It simulates a published package by copying build artifacts directly into your project, avoiding common Metro Bundler symlink issues.
 
 **First, publish local versions:**
 
@@ -183,13 +183,23 @@ yalc add @party-kit/core @party-kit/client @party-kit/host
 bun install
 ```
 
+> **Note:** We do not use the `--link` flag. Keeping the default `file:` protocol ensures files are copied _inside_ your project root, which allows Metro Bundler to watch them correctly without extra configuration.
+
 **Iterating:**
 
 When you make changes to the library:
 
 1. Run `bun run build` in the library repo.
 2. Run `yalc push` in the modified package folder (e.g., `packages/host`).
-3. Your game app will automatically pick up the changes.
+3. Your game app should hot-reload automatically.
+
+**Troubleshooting:**
+
+- **Duplicate React / Invalid Hook Call:** Ensure your library packages treat `react` as a `peerDependency` and do not bundle it. `yalc` handles this correctly by default.
+- **Changes not showing up?** If you add new files or exports, Metro might get stuck. Stop the bundler and run:
+  ```bash
+  bun start --reset-cache
+  ```
 
 ---
 

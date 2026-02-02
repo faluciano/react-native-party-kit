@@ -1,8 +1,12 @@
 {
   "name": "@party-kit/cli",
   "version": "0.0.2",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "bin": {
-    "party-kit": "./bin/party-kit"
+    "party-kit": "./dist/index.js"
   },
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target node",

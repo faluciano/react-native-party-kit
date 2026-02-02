@@ -1,5 +1,11 @@
 # @party-kit/client
 
+## 0.0.3
+
+### Patch Changes
+
+- Fix dependency mismatch: update dependencies to point to published @party-kit/core@0.0.2
+
 ## 0.0.2
 
 ### Patch Changes

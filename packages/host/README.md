@@ -15,10 +15,10 @@ The server-side library for React Native TV applications. This package turns you
 ## Installation
 
 ```bash
-bun add @party-kit/host react-native-fs react-native-network-info react-native-nitro-http-server react-native-tcp-socket
+bun add @party-kit/host
 ```
 
-> **Note:** This library relies on several native modules. Ensure you have configured them correctly in your `android/build.gradle` and `ios/Podfile`.
+> **Note:** This library includes native dependencies (`react-native-tcp-socket`, `react-native-fs`, etc.). React Native's autolinking will handle the setup for Android. Ensure your `android/build.gradle` is configured correctly if you encounter build issues.
 
 ## Usage
 

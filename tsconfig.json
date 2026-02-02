@@ -6,6 +6,6 @@
       "@party-kit/*": ["packages/*/src"]
     }
   },
-  "include": ["packages/*/src", "apps/*/src"],
+  "include": ["packages/*/src"],
   "exclude": ["node_modules", "dist"]
 }

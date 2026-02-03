@@ -9,7 +9,7 @@ const program = new Command();
 program
   .name("party-kit")
   .description("CLI for React Native Party Kit")
-  .version("0.0.1");
+  .version("0.0.4");
 
 program.addCommand(bundleCommand);
 program.addCommand(simulateCommand);

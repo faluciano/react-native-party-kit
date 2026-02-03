@@ -1,8 +1,6 @@
 # 🎮 React Native Party Kit
 
-**The de-facto framework for building premium local multiplayer games.**
-
-Turn your Android TV (or Fire TV) into a game console and use smartphones as controllers. No dedicated servers, no complex networking code—just React.
+Turn an Android TV / Fire TV into a local party-game console and use phones as web controllers.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-green.svg)
@@ -11,11 +9,23 @@ Turn your Android TV (or Fire TV) into a game console and use smartphones as con
 
 ## ✨ Features
 
-- **Invisible Networking:** Zero-config connection. Phones connect instantly by scanning a QR code. No IP addresses to type.
-- **TV-as-Server:** The TV hosts both the game logic (WebSocket) and the controller website (HTTP). Offline capable.
-- **Predictable State:** Game logic is a pure Reducer function shared between Host and Client.
-- **Premium Polish:** Built-in NTP Time Sync, Asset Preloading, and Session Recovery.
-- **Developer Experience:** Hot-reload your web controller while it's connected to the TV.
+- **Local-first:** TV runs HTTP (controller) + WebSocket (game) on your LAN.
+- **TV-as-server:** Single source of truth lives on the TV.
+- **Shared reducer:** One reducer shared between host + controller.
+- **Time sync + preloading:** Helpers for timing-sensitive games and heavy assets.
+- **Dev workflow:** Iterate on the controller without constantly rebuilding the TV app.
+
+## How It Works
+
+- TV runs a static file server (default `:8080`) and a WebSocket game server (default `:8081`).
+- Phones open the controller page, connect via WebSocket, send actions, and receive state updates.
+
+## Prerequisites / Supported
+
+- **Devices:** Android TV / Fire TV (host). Phones run any modern mobile browser (client).
+- **Network:** TV + phones on the same LAN/Wi-Fi. This is not an internet relay.
+- **Ports:** `8080` (HTTP) and `8081` (WebSocket) reachable on the LAN (configurable).
+- **Native deps:** `@party-kit/host` uses React Native native modules; it is not a pure-JS package.
 
 ---
 
@@ -55,7 +65,17 @@ export interface GameState extends IGameState {
   score: number;
 }
 
-export type GameAction = { type: "BUZZ" } | { type: "RESET" };
+// Party Kit reserves a few action types for system-level behavior.
+// Your reducer must handle these if you want full state sync.
+export type GameAction =
+  | { type: "BUZZ" }
+  | { type: "RESET" }
+  | { type: "HYDRATE"; payload: GameState }
+  | {
+      type: "PLAYER_JOINED";
+      payload: { id: string; name: string; avatar?: string; secret?: string };
+    }
+  | { type: "PLAYER_LEFT"; payload: { playerId: string } };
 
 export const initialState: GameState = {
   status: "lobby",
@@ -68,6 +88,27 @@ export const gameReducer = (
   action: GameAction,
 ): GameState => {
   switch (action.type) {
+    case "HYDRATE":
+      // Full state replacement from the host.
+      return action.payload;
+    case "PLAYER_JOINED":
+      return {
+        ...state,
+        players: {
+          ...state.players,
+          [action.payload.id]: {
+            id: action.payload.id,
+            name: action.payload.name,
+            avatar: action.payload.avatar,
+            isHost: false,
+            connected: true,
+          },
+        },
+      };
+    case "PLAYER_LEFT": {
+      const { [action.payload.playerId]: _removed, ...rest } = state.players;
+      return { ...state, players: rest };
+    }
     case "BUZZ":
       return { ...state, score: state.score + 1 };
     case "RESET":
@@ -96,11 +137,12 @@ export default function App() {
 }
 
 function GameScreen() {
-  const { state, serverUrl } = useGameHost();
+  const { state, serverUrl, serverError } = useGameHost();
 
   return (
     <View>
-      <Text>Scan to Join: {serverUrl}</Text>
+      {serverError && <Text>Server error: {String(serverError.message)}</Text>}
+      <Text>Open on phone: {serverUrl}</Text>
       <Text>Score: {state.score}</Text>
     </View>
   );
@@ -135,6 +177,39 @@ export default function Controller() {
 }
 ```
 
+## Contracts (Read This Once)
+
+- **System action types:** the runtime currently uses `HYDRATE`, `PLAYER_JOINED`, and `PLAYER_LEFT` as action types. Treat them as reserved and handle them in your reducer.
+- **State updates:** the host broadcasts full state; the client applies it by dispatching `{ type: "HYDRATE", payload: newState }`.
+- **Dev-mode WebSocket:** if the controller is served from your laptop (Vite), `useGameClient()` will try to connect WS to the laptop by default. In dev, pass `url: "ws://TV_IP:8081"`.
+
+## Dev Workflow (Controller on Laptop)
+
+On the TV host:
+
+```tsx
+<GameHostProvider
+  config={{
+    reducer: gameReducer,
+    initialState,
+    devMode: true,
+    devServerUrl: "http://192.168.1.50:5173",
+  }}
+>
+  <GameScreen />
+</GameHostProvider>
+```
+
+On the controller (served from the laptop), explicitly point WS to the TV:
+
+```ts
+useGameClient({
+  reducer: gameReducer,
+  initialState,
+  url: "ws://192.168.1.99:8081", // TV IP
+});
+```
+
 ---
 
 ## 🛠️ Contributing / Local Development
@@ -146,7 +221,7 @@ If you want to contribute to `react-native-party-kit` or test changes locally be
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/your-org/react-native-party-kit.git
+git clone <this-repo>
 cd react-native-party-kit
 bun install
 ```
@@ -225,3 +300,15 @@ When you make changes to the library:
 - [Client Documentation](./packages/client/README.md)
 - [Core Documentation](./packages/core/README.md)
 - [CLI Documentation](./packages/cli/README.md)
+
+## Troubleshooting
+
+- Phone can’t open the controller page: confirm TV and phone are on the same Wi‑Fi; verify `serverUrl` is not null.
+- Phone opens page but actions do nothing: ensure your reducer handles `HYDRATE` (state sync) and the host isn’t erroring.
+- Dev mode WS fails: pass `url: "ws://TV_IP:8081"` to `useGameClient()`.
+- Connection is flaky: enable `debug` in host/client and watch logs; keep the TV from sleeping.
+
+## Security Notes
+
+- The controller URL is reachable to anyone on the same LAN. Don’t run this on untrusted Wi‑Fi.
+- `JOIN` supports an optional `secret` field (protocol-level). Enforcement is up to your game/host logic.

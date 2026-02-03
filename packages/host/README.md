@@ -22,6 +22,38 @@ bun add @party-kit/host
 
 ## Usage
 
+## API
+
+### `<GameHostProvider config={...}>`
+
+Config:
+
+- `initialState`: initial host state
+- `reducer`: `(state, action) => state` (shared reducer)
+- `port?`: HTTP static server port (default `8080`)
+- `wsPort?`: WebSocket game server port (default `8081`)
+- `devMode?`: if true, do not start the TV static file server; instead point phones at `devServerUrl`
+- `devServerUrl?`: URL of your laptop dev server (e.g. `http://192.168.1.50:5173`)
+- `debug?`: enable verbose logs
+
+### `useGameHost()`
+
+Returns:
+
+- `state`: canonical host state
+- `dispatch(action)`: dispatches an action into your reducer
+- `serverUrl`: HTTP URL phones should open (or `devServerUrl` in dev mode)
+- `serverError`: static server error (if startup fails)
+
+## System Actions (Important)
+
+The host will dispatch a few **system action types** into your reducer. Treat these as reserved:
+
+- `PLAYER_JOINED`: payload `{ id: string, name: string, avatar?: string, secret?: string }`
+- `PLAYER_LEFT`: payload `{ playerId: string }`
+
+If you want to track players in `state.players`, handle these action types in your reducer.
+
 ### 1. Configure the Provider
 
 Wrap your root component (or the game screen) with `GameHostProvider`.
@@ -99,4 +131,12 @@ To iterate on your web controller without rebuilding the Android app constantly:
 >
 ```
 
-The TV will now tell phones to load the controller from your laptop, but the WebSocket connection will still go to the TV.
+The TV will now tell phones to load the controller from your laptop.
+
+Important: when the controller is served from the laptop, the client-side hook cannot infer the TV WebSocket host from `window.location.hostname`. In dev mode, pass `url: "ws://TV_IP:8081"` to `useGameClient()`.
+
+## Bundling / Assets
+
+In production, the host serves static controller assets from `${RNFS.MainBundlePath}/www`.
+
+The CLI `party-kit bundle` copies your web build output into `android/app/src/main/assets/www` (default). Ensure your app packaging makes those assets available under the expected `www` folder.

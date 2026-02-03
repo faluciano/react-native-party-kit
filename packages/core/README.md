@@ -51,6 +51,16 @@ export interface MyAction extends IAction {
 }
 ```
 
+### Protocol types
+
+Low-level message types and constants used by host/client:
+
+- `ClientMessage`
+- `HostMessage`
+- `MessageTypes`
+
+These are useful when debugging traffic or building a custom host/client.
+
 ### Protocol Definitions
 
 Access the raw message types if you are building a custom client/host implementation or debugging the protocol.

@@ -16,6 +16,63 @@ The client-side library for the web controller. Designed to be lightweight and f
 bun add @party-kit/client
 ```
 
+## API
+
+### `useGameClient(config)`
+
+Connects the controller to the TV host WebSocket, applies state updates, and provides an action sender.
+
+Config:
+
+- `reducer`: `(state, action) => state` (your shared reducer)
+- `initialState`: initial state used until the host hydrates
+- `url?`: explicit WebSocket URL. If omitted, the hook uses `ws(s)://{window.location.hostname}:8081`.
+- `debug?`: enable console logs
+- `onConnect?`, `onDisconnect?`: lifecycle callbacks
+
+Returns:
+
+- `status`: `'connecting' | 'connected' | 'disconnected' | 'error'`
+- `state`: current controller state (optimistic + hydrated)
+- `playerId`: server-assigned player id (after `WELCOME`)
+- `sendAction(action)`: optimistic dispatch + send to host
+- `getServerTime()`: NTP-ish server time based on periodic ping/pong
+
+## State Sync Contract (Important)
+
+The host broadcasts full state snapshots. The client applies them by dispatching a **system action**:
+
+```ts
+{ type: "HYDRATE", payload: newState }
+```
+
+Your reducer must handle `HYDRATE` (treat it as reserved). A minimal pattern:
+
+```ts
+function reducer(state, action) {
+  switch (action.type) {
+    case "HYDRATE":
+      return action.payload;
+    default:
+      return state;
+  }
+}
+```
+
+## Dev Mode (Controller Served From Laptop)
+
+If your controller is served from your laptop (Vite), `window.location.hostname` is the laptop, so the “magic connection” will try to connect WS to the laptop.
+
+In dev, pass the TV WebSocket URL explicitly:
+
+```ts
+useGameClient({
+  reducer,
+  initialState,
+  url: "ws://TV_IP:8081",
+});
+```
+
 ## Usage
 
 ### 1. The Main Hook
@@ -28,7 +85,7 @@ import { gameReducer, initialState } from "./shared/types";
 
 export default function Controller() {
   const {
-    status, // 'connecting' | 'connected' | 'disconnected'
+    status, // 'connecting' | 'connected' | 'disconnected' | 'error'
     state, // The current game state (synced with Host)
     playerId, // Your unique session ID
     sendAction, // Function to send actions to Host
@@ -89,3 +146,7 @@ function App() {
   return <GameController />;
 }
 ```
+
+## Notes / Limitations
+
+- `usePreload()` preloads images via `Image()` and uses `fetch()` for other URLs; it does not currently send the protocol `ASSETS_LOADED` message.

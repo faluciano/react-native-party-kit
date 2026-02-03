@@ -29,3 +29,18 @@ bunx party-kit bundle
 # Custom paths
 bunx party-kit bundle --source ./my-web-app --output ./android/app/src/main/assets/www
 ```
+
+### `simulate`
+
+Spawns headless WebSocket bots to simulate players (useful for load testing and quick iteration).
+
+```bash
+# Default: 4 bots, ws://localhost:8081
+bunx party-kit simulate
+
+# Custom host + count
+bunx party-kit simulate --url ws://192.168.1.99:8081 --count 8
+
+# Action interval (ms)
+bunx party-kit simulate --interval 250
+```

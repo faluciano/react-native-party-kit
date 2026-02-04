@@ -4,11 +4,11 @@ The client-side library for the web controller. Designed to be lightweight and f
 
 ## Features
 
-- **Magic Connection:** Automatically connects to the Host serving the page. No manual configuration needed.
-- **Time Synchronization:** `useServerTime()` provides NTP-synced time for perfectly timed events.
-- **Asset Preloading:** `usePreload()` blocks the game start until images/audio are ready.
+- **Default connection:** By default, connects to `ws(s)://{window.location.hostname}:8081`.
+- **Time synchronization:** `useServerTime()` helps estimate server time using periodic ping/pong.
+- **Asset preloading:** `usePreload()` is a small helper for preloading images and fetching other URLs.
 - **Optimistic UI:** State updates apply locally immediately while being sent to the server.
-- **Session Recovery:** Automatically reconnects and restores state if the screen turns off or the browser reloads.
+- **Reconnection attempts:** Automatically retries the WebSocket connection when it drops.
 
 ## Installation
 

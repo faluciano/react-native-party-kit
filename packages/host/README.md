@@ -7,7 +7,7 @@ The server-side library for React Native TV applications. This package turns you
 - **Dual-Port Architecture:**
   - **Port 8080:** Static File Server (serves the web controller).
   - **Port 8081:** WebSocket Game Server (handles real-time logic).
-- **Smart Network Discovery:** Automatically finds the correct IP address (`wlan0`/`eth0`) to display in QR codes.
+- **Smart Network Discovery:** Uses the device IPv4 address for LAN URLs.
 - **Game Loop:** Manages the canonical `IGameState` using a reducer.
 - **Dev Mode:** Supports hot-reloading the web controller during development.
 - **Debug Mode:** Optional logging for troubleshooting connection issues.

@@ -27,6 +27,12 @@ Turn an Android TV / Fire TV into a local party-game console and use phones as w
 - **Ports:** `8080` (HTTP) and `8081` (WebSocket) reachable on the LAN (configurable).
 - **Native deps:** `@party-kit/host` uses React Native native modules; it is not a pure-JS package.
 
+## Non-goals
+
+- Internet matchmaking / relay servers
+- Anti-cheat, account systems, payments
+- Hard security guarantees on untrusted networks
+
 ---
 
 ## 🚀 Usage Guide (Published Library)

@@ -61,9 +61,6 @@ Low-level message types and constants used by host/client:
 
 These are useful when debugging traffic or building a custom host/client.
 
-### Protocol Definitions
+### Protocol definitions
 
-Access the raw message types if you are building a custom client/host implementation or debugging the protocol.
-
-- `ClientMessage`: Messages sent from Phone -> TV (JOIN, ACTION, PING).
-- `HostMessage`: Messages sent from TV -> Phone (WELCOME, STATE_UPDATE, PONG).
+At the protocol level, the client sends messages like `JOIN`, `ACTION`, `PING`, and the host responds with messages like `WELCOME`, `STATE_UPDATE`, and `PONG`.

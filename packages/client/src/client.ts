@@ -20,6 +20,10 @@ interface ClientConfig<S extends IGameState, A extends IAction> {
   debug?: boolean;
 }
 
+import { createGameReducer } from "@party-kit/core";
+
+// ... existing code ...
+
 export function useGameClient<S extends IGameState, A extends IAction>(
   config: ClientConfig<S, A>,
 ) {
@@ -29,8 +33,9 @@ export function useGameClient<S extends IGameState, A extends IAction>(
   const [playerId, setPlayerId] = useState<string | null>(null);
 
   // Local Optimistic State
+  // Wrap the user's reducer with createGameReducer to handle HYDRATE automatically
   const [state, dispatchLocal] = useReducer(
-    config.reducer,
+    createGameReducer(config.reducer),
     config.initialState,
   );
 
@@ -68,12 +73,22 @@ export function useGameClient<S extends IGameState, A extends IAction>(
       reconnectAttempts.current = 0;
       config.onConnect?.();
 
-      // Auto-join if we have a saved secret (Seat Reservation)
-      // For MVP, we'll just send a JOIN
+      // Session Recovery Logic
+      let secret = localStorage.getItem("pk_secret");
+      if (!secret) {
+        secret = Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("pk_secret", secret);
+      }
+
+      // Join with secret
       ws.send(
         JSON.stringify({
           type: MessageTypes.JOIN,
-          payload: { name: "Player", avatar: "😀" },
+          payload: {
+            name: "Player",
+            avatar: "😀",
+            secret,
+          },
         }),
       );
     };

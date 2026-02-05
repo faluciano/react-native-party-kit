@@ -62,6 +62,9 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
   // 2. Start WebSocket Server (Port 8081)
   const wsServer = useRef<GameWebSocketServer | null>(null);
 
+  // Track active sessions: secret -> playerId
+  const sessions = useRef<Map<string, string>>(new Map());
+
   useEffect(() => {
     const port = config.wsPort || 8081;
     const server = new GameWebSocketServer({ port, debug: config.debug });
@@ -83,28 +86,30 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
         console.log(`[GameHost] Msg from ${socketId}:`, message);
 
       switch (message.type) {
-        case MessageTypes.JOIN:
-          // Handle Join (create player in state)
-          // For MVP, we'll just dispatch a generic JOIN action if the reducer supports it
-          // In a real app, we'd wrap this dispatch with specific logic
+        case MessageTypes.JOIN: {
+          // Check for existing session
+          const { secret, ...payload } = message.payload;
+
+          if (secret) {
+            // Update the session map with the new socket ID for this secret
+            sessions.current.set(secret, socketId);
+          }
+
           dispatch({
             type: "PLAYER_JOINED",
-            payload: { id: socketId, ...message.payload },
+            payload: { id: socketId, secret, ...payload },
           } as unknown as A);
 
-          // Send Welcome
-          // We can't use 'state' from the closure because it's stale (initial state).
-          // However, we rely on the subsequent 'useEffect' [state] to broadcast the latest state.
-          // Or we can try to use a ref to track current state.
           server.send(socketId, {
             type: MessageTypes.WELCOME,
             payload: {
               playerId: socketId,
-              state: stateRef.current, // Use ref to get latest state
+              state: stateRef.current,
               serverTime: Date.now(),
             },
           });
           break;
+        }
 
         case MessageTypes.ACTION:
           dispatch(message.payload as A);
@@ -126,6 +131,10 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
     server.on("disconnect", (socketId) => {
       if (config.debug)
         console.log(`[GameHost] Client disconnected: ${socketId}`);
+
+      // We do NOT remove the session from the map here,
+      // allowing them to reconnect later with the same secret.
+
       dispatch({
         type: "PLAYER_LEFT",
         payload: { playerId: socketId },

@@ -18,6 +18,8 @@ bun add @party-kit/core
 
 A helper to define type-safe reducers that can be shared between the Host and Client.
 
+**Important:** This wrapper automatically handles the `HYDRATE` system action, which synchronizes the client's state with the host. You do not need to implement this yourself.
+
 ```typescript
 import { createGameReducer } from "@party-kit/core";
 import { GameState, GameAction } from "./types";

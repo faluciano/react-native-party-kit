@@ -7,6 +7,8 @@ The server-side library for React Native TV applications. This package turns you
 - **Dual-Port Architecture:**
   - **Port 8080:** Static File Server (serves the web controller).
   - **Port 8081:** WebSocket Game Server (handles real-time logic).
+- **Session Recovery:** Tracks user secrets to support reconnection (handling page refreshes).
+- **Large Message Support:** Capable of sending game states larger than 64KB (64-bit frame lengths).
 - **Smart Network Discovery:** Uses the device IPv4 address for LAN URLs.
 - **Game Loop:** Manages the canonical `IGameState` using a reducer.
 - **Dev Mode:** Supports hot-reloading the web controller during development.
@@ -52,7 +54,7 @@ The host will dispatch a few **system action types** into your reducer. Treat th
 - `PLAYER_JOINED`: payload `{ id: string, name: string, avatar?: string, secret?: string }`
 - `PLAYER_LEFT`: payload `{ playerId: string }`
 
-If you want to track players in `state.players`, handle these action types in your reducer.
+If you want to track players in `state.players`, handle these action types in your reducer. The `secret` field can be used to identify returning players.
 
 ### 1. Configure the Provider
 

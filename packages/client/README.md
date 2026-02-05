@@ -9,6 +9,7 @@ The client-side library for the web controller. Designed to be lightweight and f
 - **Asset preloading:** `usePreload()` is a small helper for preloading images and fetching other URLs.
 - **Optimistic UI:** State updates apply locally immediately while being sent to the server.
 - **Reconnection attempts:** Automatically retries the WebSocket connection when it drops.
+- **Session Recovery:** Persists a secret in local storage to recover the same player session after a page refresh.
 
 ## Installation
 
@@ -38,21 +39,19 @@ Returns:
 - `sendAction(action)`: optimistic dispatch + send to host
 - `getServerTime()`: NTP-ish server time based on periodic ping/pong
 
-## State Sync Contract (Important)
+## State Sync Contract
 
-The host broadcasts full state snapshots. The client applies them by dispatching a **system action**:
+The host broadcasts full state snapshots. The client automatically applies them using a higher-order reducer wrapper.
 
-```ts
-{ type: "HYDRATE", payload: newState }
-```
+**You do NOT need to handle `HYDRATE` manually in your reducer.** The library now handles this automatically by intercepting the hydration action before it reaches your reducer logic.
 
-Your reducer must handle `HYDRATE` (treat it as reserved). A minimal pattern:
+Just write your reducer as if it were local:
 
 ```ts
 function reducer(state, action) {
   switch (action.type) {
-    case "HYDRATE":
-      return action.payload;
+    case "SCORE":
+      return { ...state, score: state.score + 1 };
     default:
       return state;
   }

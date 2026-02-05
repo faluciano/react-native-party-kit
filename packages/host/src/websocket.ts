@@ -214,8 +214,8 @@ export class GameWebSocketServer extends EventEmitter {
     let headerLength = 2;
 
     if (payload.length > 65535) {
-      // Not implemented for MVP
       lengthByte = 127;
+      headerLength = 10; // 2 header + 8 length
     } else if (payload.length > 125) {
       lengthByte = 126;
       headerLength = 4;
@@ -227,6 +227,11 @@ export class GameWebSocketServer extends EventEmitter {
     if (lengthByte === 126) {
       buffer[1] = 126;
       buffer.writeUInt16BE(payload.length, 2);
+    } else if (lengthByte === 127) {
+      buffer[1] = 127;
+      // Write 64-bit integer (max safe integer in JS is 2^53, so high 32 bits are 0)
+      buffer.writeUInt32BE(0, 2);
+      buffer.writeUInt32BE(payload.length, 6);
     } else {
       buffer[1] = lengthByte;
     }

@@ -18,7 +18,7 @@ interface GameHostConfig<S extends IGameState, A extends IAction> {
   initialState: S;
   reducer: (state: S, action: A) => S;
   port?: number; // Static server port (default 8080)
-  wsPort?: number; // WebSocket port (default 8081)
+  wsPort?: number; // WebSocket port (default: HTTP port + 2, i.e. 8082)
   devMode?: boolean;
   devServerUrl?: string;
   staticDir?: string; // Override the default www directory path (required on Android)
@@ -61,14 +61,15 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
     staticDir: config.staticDir,
   });
 
-  // 2. Start WebSocket Server (Port 8081)
+  // 2. Start WebSocket Server (Convention: HTTP port + 2, avoids Metro on 8081)
   const wsServer = useRef<GameWebSocketServer | null>(null);
 
   // Track active sessions: secret -> playerId
   const sessions = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
-    const port = config.wsPort || 8081;
+    const httpPort = config.port || 8080;
+    const port = config.wsPort || httpPort + 2;
     const server = new GameWebSocketServer({ port, debug: config.debug });
 
     server.start();

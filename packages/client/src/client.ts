@@ -12,7 +12,8 @@ const MAX_RETRIES = 5;
 const BASE_DELAY = 1000;
 
 interface ClientConfig<S extends IGameState, A extends IAction> {
-  url?: string; // Defaults to window.location.hostname
+  url?: string; // Full WebSocket URL (overrides auto-detection)
+  wsPort?: number; // WebSocket port (default: auto-detected as HTTP port + 1)
   reducer: (state: S, action: A) => S;
   initialState: S;
   onConnect?: () => void;
@@ -49,15 +50,18 @@ export function useGameClient<S extends IGameState, A extends IAction>(
   const connect = useCallback(() => {
     // 1. Magic Client: Determine URL
     // If explicit URL provided, use it.
-    // Otherwise, assume we are being served by the Host, so use window.location.hostname
-    // Port 8081 is the hardcoded Game Port (as defined in Host package)
+    // Otherwise, assume we are being served by the Host's static server,
+    // so derive the WebSocket URL from window.location.
+    // Convention: WS port = HTTP port + 2 (e.g., HTTP 8080 → WS 8082)
+    // Port + 1 is skipped to avoid conflicts with Metro bundler (which uses 8081)
     let wsUrl = config.url;
 
     if (!wsUrl && typeof window !== "undefined") {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const host = window.location.hostname;
-      // Assumption: Host runs WS on port 8081
-      wsUrl = `${protocol}//${host}:8081`;
+      const httpPort = parseInt(window.location.port, 10) || 80;
+      const wsPort = config.wsPort || httpPort + 2;
+      wsUrl = `${protocol}//${host}:${wsPort}`;
     }
 
     if (!wsUrl) return;
@@ -161,7 +165,7 @@ export function useGameClient<S extends IGameState, A extends IAction>(
       if (config.debug) console.error("[GameClient] Error", e);
       setStatus("error");
     };
-  }, [config.url, config.debug]);
+  }, [config.url, config.wsPort, config.debug]);
 
   // Initial Connection
   useEffect(() => {

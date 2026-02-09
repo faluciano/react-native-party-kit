@@ -87,6 +87,22 @@ function isValidClientMessage(msg: unknown): msg is ClientMessage {
   }
 }
 
+/**
+ * React context provider that turns a React Native TV app into a local game server.
+ *
+ * Starts a static file server (for the web controller) and a WebSocket game server
+ * (for real-time state sync). Manages the canonical game state using the provided
+ * reducer and broadcasts state updates to all connected clients.
+ *
+ * @param config - Host configuration including reducer, initial state, ports, and callbacks.
+ *
+ * @example
+ * ```tsx
+ * <GameHostProvider config={{ reducer: gameReducer, initialState }}>
+ *   <GameScreen />
+ * </GameHostProvider>
+ * ```
+ */
 export function GameHostProvider<S extends IGameState, A extends IAction>({
   children,
   config,
@@ -318,6 +334,16 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
   );
 }
 
+/**
+ * React hook to access the game host context.
+ *
+ * Must be used within a `<GameHostProvider>`. Returns the canonical game state,
+ * a dispatch function for actions, the server URL (for QR codes), and any
+ * server startup errors.
+ *
+ * @returns An object with `state`, `dispatch`, `serverUrl`, and `serverError`.
+ * @throws If used outside of a `<GameHostProvider>`.
+ */
 export function useGameHost<S extends IGameState, A extends IAction>() {
   const context = useContext(GameHostContext);
   if (!context) {

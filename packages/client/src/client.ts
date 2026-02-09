@@ -33,6 +33,24 @@ export interface ClientConfig<S extends IGameState, A extends IAction> {
   debug?: boolean;
 }
 
+/**
+ * React hook that connects the web controller to the TV host via WebSocket.
+ *
+ * Manages the full lifecycle: connection, JOIN handshake, session recovery,
+ * optimistic state updates, server time synchronization, and automatic
+ * reconnection with exponential backoff.
+ *
+ * @param config - Client configuration including reducer, initial state, and connection options.
+ * @returns An object with `status`, `state`, `playerId`, `sendAction`, `getServerTime`, `rtt`, `disconnect`, and `reconnect`.
+ *
+ * @example
+ * ```tsx
+ * const { state, sendAction } = useGameClient({
+ *   reducer: gameReducer,
+ *   initialState,
+ * });
+ * ```
+ */
 export function useGameClient<S extends IGameState, A extends IAction>(
   config: ClientConfig<S, A>,
 ) {

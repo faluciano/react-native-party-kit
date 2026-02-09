@@ -73,17 +73,10 @@ export interface GameState extends IGameState {
   score: number;
 }
 
-// Couch Kit reserves a few action types for system-level behavior.
-// Your reducer must handle these if you want full state sync.
-export type GameAction =
-  | { type: "BUZZ" }
-  | { type: "RESET" }
-  | { type: "HYDRATE"; payload: GameState }
-  | {
-      type: "PLAYER_JOINED";
-      payload: { id: string; name: string; avatar?: string; secret?: string };
-    }
-  | { type: "PLAYER_LEFT"; payload: { playerId: string } };
+// Only define your own game actions.
+// System actions (HYDRATE, PLAYER_JOINED, PLAYER_LEFT) are handled
+// automatically by createGameReducer — you never see them here.
+export type GameAction = { type: "BUZZ" } | { type: "RESET" };
 
 export const initialState: GameState = {
   status: "lobby",
@@ -91,32 +84,13 @@ export const initialState: GameState = {
   score: 0,
 };
 
+// Your reducer only handles your own actions.
+// Player tracking and state hydration are handled by the framework.
 export const gameReducer = (
   state: GameState,
   action: GameAction,
 ): GameState => {
   switch (action.type) {
-    case "HYDRATE":
-      // Full state replacement from the host.
-      return action.payload;
-    case "PLAYER_JOINED":
-      return {
-        ...state,
-        players: {
-          ...state.players,
-          [action.payload.id]: {
-            id: action.payload.id,
-            name: action.payload.name,
-            avatar: action.payload.avatar,
-            isHost: false,
-            connected: true,
-          },
-        },
-      };
-    case "PLAYER_LEFT": {
-      const { [action.payload.playerId]: _removed, ...rest } = state.players;
-      return { ...state, players: rest };
-    }
     case "BUZZ":
       return { ...state, score: state.score + 1 };
     case "RESET":
@@ -147,19 +121,19 @@ export default function App() {
 
 > **Tip:** On Android, APK-bundled assets live inside a zip archive and cannot be served directly. Use the `staticDir` config option to point to a writable filesystem path where you've extracted the `www/` assets at runtime. See the [Buzz starter](https://github.com/faluciano/buzz-tv-party-game) for a working example with `useExtractAssets()`.
 
+```tsx
 function GameScreen() {
-const { state, serverUrl, serverError } = useGameHost();
+  const { state, serverUrl, serverError } = useGameHost();
 
-return (
-<View>
-{serverError && <Text>Server error: {String(serverError.message)}</Text>}
-<Text>Open on phone: {serverUrl}</Text>
-<Text>Score: {state.score}</Text>
-</View>
-);
+  return (
+    <View>
+      {serverError && <Text>Server error: {String(serverError.message)}</Text>}
+      <Text>Open on phone: {serverUrl}</Text>
+      <Text>Score: {state.score}</Text>
+    </View>
+  );
 }
-
-````
+```
 
 ### 4. The Client (Web Controller)
 
@@ -167,7 +141,7 @@ Scaffold a web controller for players to run on their phones:
 
 ```bash
 bunx couch-kit init web-controller
-````
+```
 
 In `web-controller/src/App.tsx`:
 
@@ -191,8 +165,8 @@ export default function Controller() {
 
 ## Contracts (Read This Once)
 
-- **System action types:** the runtime currently uses `HYDRATE`, `PLAYER_JOINED`, and `PLAYER_LEFT` as action types. Treat them as reserved and handle them in your reducer.
-- **State updates:** the host broadcasts full state; the client applies it by dispatching `{ type: "HYDRATE", payload: newState }`.
+- **System actions are automatic:** The framework uses internal action types (`__HYDRATE__`, `__PLAYER_JOINED__`, `__PLAYER_LEFT__`) under the hood. These are handled automatically by `createGameReducer` -- you do **not** need to handle them in your reducer.
+- **State updates:** The host broadcasts full state snapshots. The client applies them automatically via hydration.
 - **Dev-mode WebSocket:** if the controller is served from your laptop (Vite), `useGameClient()` will try to connect WS to the laptop by default. In dev, pass `url: "ws://TV_IP:8082"`.
 
 ## Dev Workflow (Controller on Laptop)
@@ -316,7 +290,7 @@ When you make changes to the library:
 ## Troubleshooting
 
 - Phone can’t open the controller page: confirm TV and phone are on the same Wi‑Fi; verify `serverUrl` is not null.
-- Phone opens page but actions do nothing: ensure your reducer handles `HYDRATE` (state sync) and the host isn’t erroring.
+- Phone opens page but actions do nothing: check that your reducer handles your custom action types and the host isn’t erroring.
 - Dev mode WS fails: pass `url: "ws://TV_IP:8082"` to `useGameClient()`.
 - Connection is flaky: enable `debug` in host/client and watch logs; keep the TV from sleeping.
 

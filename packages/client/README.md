@@ -28,6 +28,11 @@ Config:
 - `reducer`: `(state, action) => state` (your shared reducer)
 - `initialState`: initial state used until the host hydrates
 - `url?`: explicit WebSocket URL. If omitted, the hook uses `ws(s)://{window.location.hostname}:8082`.
+- `name?`: player display name (default: `"Player"`)
+- `avatar?`: player avatar emoji (default: `"\u{1F600}"`)
+- `maxRetries?`: maximum reconnection attempts before giving up (default: `5`)
+- `baseDelay?`: base delay in ms for exponential backoff reconnection (default: `1000`)
+- `maxDelay?`: maximum delay in ms cap for reconnection backoff (default: `10000`)
 - `debug?`: enable console logs
 - `onConnect?`, `onDisconnect?`: lifecycle callbacks
 
@@ -38,6 +43,9 @@ Returns:
 - `playerId`: server-assigned player id (after `WELCOME`)
 - `sendAction(action)`: optimistic dispatch + send to host
 - `getServerTime()`: NTP-ish server time based on periodic ping/pong
+- `rtt`: round-trip time (ms) to the server, updated periodically via PING/PONG
+- `disconnect()`: manually disconnect from the host (prevents automatic reconnection)
+- `reconnect()`: manually reconnect to the host (resets the reconnection attempt counter)
 
 ## State Sync Contract
 
@@ -110,13 +118,17 @@ export default function Controller() {
 
 ### 2. Time Synchronization
 
-For rhythm games or precise countdowns, use `getServerTime()` instead of `Date.now()`. This accounts for network latency.
+For rhythm games or precise countdowns, use `getServerTime()` from the `useGameClient` return value instead of `Date.now()`. This accounts for network latency.
 
 ```tsx
-import { useServerTime } from "@couch-kit/client";
+import { useGameClient } from "@couch-kit/client";
+import { gameReducer, initialState } from "./shared/types";
 
-function Countdown({ targetTimestamp }) {
-  const { getServerTime } = useServerTime();
+function Controller({ targetTimestamp }) {
+  const { state, sendAction, getServerTime } = useGameClient({
+    reducer: gameReducer,
+    initialState,
+  });
 
   // Calculate seconds remaining based on SERVER time
   const now = getServerTime();

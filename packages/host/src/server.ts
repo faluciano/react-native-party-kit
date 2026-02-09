@@ -11,6 +11,16 @@ export interface CouchKitHostConfig {
   staticDir?: string; // Override the default www directory path (required on Android)
 }
 
+/**
+ * React hook that manages a static HTTP file server for serving the web controller.
+ *
+ * In production mode, starts a `StaticServer` bound to `0.0.0.0` on the configured port,
+ * serving files from `staticDir` (or `${RNFS.MainBundlePath}/www` by default).
+ * In dev mode, skips the server and returns `devServerUrl` directly.
+ *
+ * @param config - Server configuration including port, dev mode, and static directory.
+ * @returns An object with `url` (the server URL or null), `error`, and `loading`.
+ */
 export const useStaticServer = (config: CouchKitHostConfig) => {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);

@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
 
 const program = new Command();
 
-program.name("couch-kit").description("CLI for Couch Kit").version("0.0.7");
+program.name("couch-kit").description("CLI for Couch Kit").version(version);
 
 program
   .command("bundle")

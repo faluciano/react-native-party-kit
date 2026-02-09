@@ -50,14 +50,20 @@ Returns:
 - `serverUrl`: HTTP URL phones should open (or `devServerUrl` in dev mode)
 - `serverError`: static server error (if startup fails)
 
-## System Actions (Important)
+## System Actions
 
-The host will dispatch a few **system action types** into your reducer. Treat these as reserved:
+The host automatically dispatches internal system actions (`__PLAYER_JOINED__`, `__PLAYER_LEFT__`, `__HYDRATE__`) into `createGameReducer`, which handles them for you. **You do not need to handle these in your reducer.**
 
-- `PLAYER_JOINED`: payload `{ id: string, name: string, avatar?: string, secret?: string }`
-- `PLAYER_LEFT`: payload `{ playerId: string }`
+Player tracking (`state.players`) is managed automatically:
 
-If you want to track players in `state.players`, handle these action types in your reducer. The `secret` field can be used to identify returning players.
+- When a player joins, they are added to `state.players` with `connected: true`.
+- When a player disconnects, they are marked as `connected: false`.
+
+To react to player events outside of state (e.g., logging, analytics), use the callback config options:
+
+- `onPlayerJoined?: (playerId: string, name: string) => void` -- called when a player successfully joins.
+- `onPlayerLeft?: (playerId: string) => void` -- called when a player disconnects.
+- `onError?: (error: Error) => void` -- called when a server error occurs.
 
 ### 1. Configure the Provider
 

@@ -1,3 +1,9 @@
+/**
+ * Represents a player connected to the game session.
+ *
+ * Managed automatically by `createGameReducer` -- players are added on join
+ * and marked as disconnected on leave.
+ */
 export interface IPlayer {
   id: string;
   name: string;
@@ -6,11 +12,23 @@ export interface IPlayer {
   connected: boolean;
 }
 
+/**
+ * Base interface for game state. All game states must extend this.
+ *
+ * Provides `status` (e.g. `"lobby"`, `"playing"`) and a `players` record
+ * that is managed automatically by the framework.
+ */
 export interface IGameState {
   status: string;
   players: Record<string, IPlayer>;
 }
 
+/**
+ * Base interface for game actions. All custom actions must extend this.
+ *
+ * The `type` field is required; `payload`, `playerId`, and `timestamp` are optional
+ * and can be used by game-specific logic.
+ */
 export interface IAction {
   type: string;
   payload?: unknown;
@@ -37,6 +55,12 @@ export const InternalActionTypes = {
   PLAYER_LEFT: "__PLAYER_LEFT__",
 } as const;
 
+/**
+ * Type alias for a game reducer function.
+ *
+ * Accepts the current state and an action, and returns the new state.
+ * Used by both `GameHostProvider` and `useGameClient` to define game logic.
+ */
 export type GameReducer<S extends IGameState, A extends IAction> = (
   state: S,
   action: A,

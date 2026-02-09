@@ -11,6 +11,18 @@ interface TimeSyncState {
   rtt: number; // Round Trip Time
 }
 
+/**
+ * Computes the clock offset and round-trip time between client and server.
+ *
+ * Uses a simplified NTP-style calculation:
+ * - RTT = clientReceiveTime - clientSendTime
+ * - Offset = (serverTime + RTT/2) - clientReceiveTime
+ *
+ * @param clientSendTime - Timestamp (ms) when the PING was sent.
+ * @param clientReceiveTime - Timestamp (ms) when the PONG was received.
+ * @param serverTime - Server timestamp (ms) included in the PONG payload.
+ * @returns An object with `offset` (ms to add to `Date.now()` for server time) and `rtt` (round-trip time in ms).
+ */
 // Pure logic for testing
 export function calculateTimeSync(
   clientSendTime: number,
@@ -25,6 +37,19 @@ export function calculateTimeSync(
   return { offset, rtt };
 }
 
+/**
+ * React hook that synchronizes the client clock with the host server.
+ *
+ * Periodically sends PING messages over the WebSocket and processes PONG
+ * responses to estimate the clock offset and round-trip time.
+ *
+ * This hook is used internally by `useGameClient` and does not need to be
+ * called directly. Access `getServerTime()` and `rtt` from the
+ * `useGameClient` return value instead.
+ *
+ * @param socket - The active WebSocket connection (or `null` if not yet connected).
+ * @returns An object with `getServerTime` (returns estimated server time), `rtt`, and `handlePong` (callback for PONG messages).
+ */
 export function useServerTime(socket: WebSocket | null) {
   const [timeSync, setTimeSync] = useState<TimeSyncState>({
     offset: 0,

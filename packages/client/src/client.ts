@@ -4,7 +4,7 @@ import {
   type HostMessage,
   type IGameState,
   type IAction,
-} from "@party-kit/core";
+} from "@couch-kit/core";
 import { useServerTime } from "./time-sync";
 
 // Reconnection Constants
@@ -23,7 +23,7 @@ interface ClientConfig<S extends IGameState, A extends IAction> {
   debug?: boolean;
 }
 
-import { createGameReducer } from "@party-kit/core";
+import { createGameReducer } from "@couch-kit/core";
 
 export function useGameClient<S extends IGameState, A extends IAction>(
   config: ClientConfig<S, A>,
@@ -80,10 +80,10 @@ export function useGameClient<S extends IGameState, A extends IAction>(
       // Session Recovery Logic
       let secret: string | null = null;
       try {
-        secret = localStorage.getItem("pk_secret");
+        secret = localStorage.getItem("ck_secret");
         if (!secret) {
           secret = Math.random().toString(36).substring(2, 15);
-          localStorage.setItem("pk_secret", secret);
+          localStorage.setItem("ck_secret", secret);
         }
       } catch {
         // localStorage unavailable (Safari private browsing, restrictive WebViews, etc.)
@@ -112,7 +112,7 @@ export function useGameClient<S extends IGameState, A extends IAction>(
             setPlayerId(msg.payload.playerId);
             // Hydrate state from server (Single Source of Truth)
             // The WELCOME payload contains the full authoritative game state.
-            // Dispatch HYDRATE which is handled by createGameReducer in @party-kit/core.
+            // Dispatch HYDRATE which is handled by createGameReducer in @couch-kit/core.
             // @ts-expect-error - HYDRATE is an internal action managed by createGameReducer
             dispatchLocal({ type: "HYDRATE", payload: msg.payload.state });
             break;

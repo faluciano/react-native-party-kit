@@ -6,10 +6,7 @@ import { initCommand } from "./commands/init";
 
 const program = new Command();
 
-program
-  .name("party-kit")
-  .description("CLI for React Native Party Kit")
-  .version("0.0.5");
+program.name("couch-kit").description("CLI for Couch Kit").version("0.0.6");
 
 program.addCommand(bundleCommand);
 program.addCommand(simulateCommand);

@@ -1,5 +1,5 @@
 {
-  "name": "react-native-party-kit",
+  "name": "couch-kit",
   "private": true,
   "workspaces": [
     "packages/*"

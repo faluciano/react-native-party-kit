@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@party-kit/core": ["../core/src"]
+      "@couch-kit/core": ["../core/src"]
     }
   },
   "include": ["src/**/*", "../core/src/**/*"]

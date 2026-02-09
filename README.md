@@ -1,4 +1,4 @@
-# 🎮 React Native Party Kit
+# 🎮 Couch Kit
 
 Turn an Android TV / Fire TV into a local party-game console and use phones as web controllers.
 
@@ -25,7 +25,7 @@ Turn an Android TV / Fire TV into a local party-game console and use phones as w
 - **Devices:** Android TV / Fire TV (host). Phones run any modern mobile browser (client).
 - **Network:** TV + phones on the same LAN/Wi-Fi. This is not an internet relay.
 - **Ports:** `8080` (HTTP) and `8082` (WebSocket) reachable on the LAN (configurable).
-- **Native deps:** `@party-kit/host` uses React Native native modules; it is not a pure-JS package.
+- **Native deps:** `@couch-kit/host` uses React Native native modules; it is not a pure-JS package.
 
 ## Non-goals
 
@@ -37,9 +37,9 @@ Turn an Android TV / Fire TV into a local party-game console and use phones as w
 
 ## 🚀 Usage Guide (Published Library)
 
-> **Starter Project:** The fastest way to get started is to clone the [Buzz](https://github.com/faluciano/buzz-tv-party-game) starter project — a fully working buzzer game that demonstrates the complete `@party-kit` setup (shared reducer, TV host, phone controller, build pipeline). Use it as a starting point for your own game.
+> **Starter Project:** The fastest way to get started is to clone the [Buzz](https://github.com/faluciano/buzz-tv-party-game) starter project — a fully working buzzer game that demonstrates the complete `@couch-kit` setup (shared reducer, TV host, phone controller, build pipeline). Use it as a starting point for your own game.
 
-This guide assumes you are using the published `@party-kit/*` packages from npm.
+This guide assumes you are using the published `@couch-kit/*` packages from npm.
 
 ### 1. Installation
 
@@ -52,14 +52,14 @@ cd my-party-game
 bun init
 
 # For the TV App (Host)
-bun add @party-kit/host @party-kit/core
+bun add @couch-kit/host @couch-kit/core
 ```
 
 If you are setting up the Web Controller manually (instead of using the CLI in Step 4):
 
 ```bash
 # For the Web Controller (Client)
-bun add @party-kit/client @party-kit/core
+bun add @couch-kit/client @couch-kit/core
 ```
 
 ### 2. The Game Logic (Shared)
@@ -67,13 +67,13 @@ bun add @party-kit/client @party-kit/core
 Define your game state and actions in a shared file (e.g., `shared/types.ts`). This ensures both your TV Host and Web Controller agree on the rules.
 
 ```typescript
-import { IGameState, IAction } from "@party-kit/core";
+import { IGameState, IAction } from "@couch-kit/core";
 
 export interface GameState extends IGameState {
   score: number;
 }
 
-// Party Kit reserves a few action types for system-level behavior.
+// Couch Kit reserves a few action types for system-level behavior.
 // Your reducer must handle these if you want full state sync.
 export type GameAction =
   | { type: "BUZZ" }
@@ -132,7 +132,7 @@ export const gameReducer = (
 In your React Native TV app (using `react-native-tvos` or Expo with TV config):
 
 ```tsx
-import { GameHostProvider, useGameHost } from "@party-kit/host";
+import { GameHostProvider, useGameHost } from "@couch-kit/host";
 import { gameReducer, initialState } from "./shared/types";
 import { Text, View } from "react-native";
 
@@ -148,30 +148,31 @@ export default function App() {
 > **Tip:** On Android, APK-bundled assets live inside a zip archive and cannot be served directly. Use the `staticDir` config option to point to a writable filesystem path where you've extracted the `www/` assets at runtime. See the [Buzz starter](https://github.com/faluciano/buzz-tv-party-game) for a working example with `useExtractAssets()`.
 
 function GameScreen() {
-  const { state, serverUrl, serverError } = useGameHost();
+const { state, serverUrl, serverError } = useGameHost();
 
-  return (
-    <View>
-      {serverError && <Text>Server error: {String(serverError.message)}</Text>}
-      <Text>Open on phone: {serverUrl}</Text>
-      <Text>Score: {state.score}</Text>
-    </View>
-  );
+return (
+<View>
+{serverError && <Text>Server error: {String(serverError.message)}</Text>}
+<Text>Open on phone: {serverUrl}</Text>
+<Text>Score: {state.score}</Text>
+</View>
+);
 }
-```
+
+````
 
 ### 4. The Client (Web Controller)
 
 Scaffold a web controller for players to run on their phones:
 
 ```bash
-bunx party-kit init web-controller
-```
+bunx couch-kit init web-controller
+````
 
 In `web-controller/src/App.tsx`:
 
 ```tsx
-import { useGameClient } from "@party-kit/client";
+import { useGameClient } from "@couch-kit/client";
 import { gameReducer, initialState } from "../../shared/types";
 
 export default function Controller() {
@@ -225,7 +226,7 @@ useGameClient({
 
 ## 🛠️ Contributing / Local Development
 
-If you want to contribute to `react-native-party-kit` or test changes locally before they are published, follow these steps.
+If you want to contribute to `couch-kit` or test changes locally before they are published, follow these steps.
 
 ### 1. Setup the Monorepo
 
@@ -233,7 +234,7 @@ Clone the repository and install dependencies:
 
 ```bash
 git clone <this-repo>
-cd react-native-party-kit
+cd couch-kit
 bun install
 ```
 
@@ -248,7 +249,7 @@ bun run build
 Or individually:
 
 ```bash
-bun run --filter @party-kit/host build
+bun run --filter @couch-kit/host build
 ```
 
 ### 3. Testing in a Real App (Yalc)
@@ -258,7 +259,7 @@ To test your local changes in a real React Native app, we recommend using `yalc`
 **First, publish local versions:**
 
 ```bash
-# In the root of react-native-party-kit
+# In the root of couch-kit
 bun global add yalc
 bun run build
 
@@ -272,7 +273,7 @@ cd ../host && yalc publish
 
 ```bash
 cd ../my-party-game
-yalc add @party-kit/core @party-kit/client @party-kit/host
+yalc add @couch-kit/core @couch-kit/client @couch-kit/host
 bun install
 ```
 
@@ -300,10 +301,10 @@ When you make changes to the library:
 
 | Package                 | Purpose                                                                                    |
 | ----------------------- | ------------------------------------------------------------------------------------------ |
-| **`@party-kit/host`**   | Runs on the TV. Manages WebSocket server, serves static files, and holds the "True" state. |
-| **`@party-kit/client`** | Runs on the phone browser. Connects to the host and renders the controller UI.             |
-| **`@party-kit/core`**   | Shared TypeScript types and protocol definitions.                                          |
-| **`@party-kit/cli`**    | Tools to bundle the web controller into the Android app.                                   |
+| **`@couch-kit/host`**   | Runs on the TV. Manages WebSocket server, serves static files, and holds the "True" state. |
+| **`@couch-kit/client`** | Runs on the phone browser. Connects to the host and renders the controller UI.             |
+| **`@couch-kit/core`**   | Shared TypeScript types and protocol definitions.                                          |
+| **`@couch-kit/cli`**    | Tools to bundle the web controller into the Android app.                                   |
 
 ## 📚 Documentation
 

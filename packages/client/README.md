@@ -1,4 +1,4 @@
-# @party-kit/client
+# @couch-kit/client
 
 The client-side library for the web controller. Designed to be lightweight and framework-agnostic (though React hooks are provided).
 
@@ -14,7 +14,7 @@ The client-side library for the web controller. Designed to be lightweight and f
 ## Installation
 
 ```bash
-bun add @party-kit/client
+bun add @couch-kit/client
 ```
 
 ## API
@@ -79,7 +79,7 @@ useGameClient({
 The `useGameClient` hook manages the WebSocket connection and synchronizes state with the TV.
 
 ```tsx
-import { useGameClient } from "@party-kit/client";
+import { useGameClient } from "@couch-kit/client";
 import { gameReducer, initialState } from "./shared/types";
 
 export default function Controller() {
@@ -113,7 +113,7 @@ export default function Controller() {
 For rhythm games or precise countdowns, use `getServerTime()` instead of `Date.now()`. This accounts for network latency.
 
 ```tsx
-import { useServerTime } from "@party-kit/client";
+import { useServerTime } from "@couch-kit/client";
 
 function Countdown({ targetTimestamp }) {
   const { getServerTime } = useServerTime();
@@ -131,7 +131,7 @@ function Countdown({ targetTimestamp }) {
 Ensure heavy assets (images, sounds) are fully loaded before showing the game interface.
 
 ```tsx
-import { usePreload } from "@party-kit/client";
+import { usePreload } from "@couch-kit/client";
 
 const ASSETS = ["/images/avatar_1.png", "/sounds/buzz.mp3"];
 

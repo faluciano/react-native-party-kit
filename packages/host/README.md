@@ -1,4 +1,4 @@
-# @party-kit/host
+# @couch-kit/host
 
 The server-side library for React Native TV applications. This package turns your TV app into a local game server.
 
@@ -19,7 +19,7 @@ The server-side library for React Native TV applications. This package turns you
 ## Installation
 
 ```bash
-bun add @party-kit/host
+bun add @couch-kit/host
 ```
 
 > **Note:** This library includes native dependencies (`react-native-tcp-socket`, `react-native-fs`, etc.). React Native's autolinking will handle the setup for Android. Ensure your `android/build.gradle` is configured correctly if you encounter build issues.
@@ -64,7 +64,7 @@ If you want to track players in `state.players`, handle these action types in yo
 Wrap your root component (or the game screen) with `GameHostProvider`.
 
 ```tsx
-import { GameHostProvider } from "@party-kit/host";
+import { GameHostProvider } from "@couch-kit/host";
 import { gameReducer, initialState } from "./shared/gameLogic";
 
 export default function App() {
@@ -89,7 +89,7 @@ export default function App() {
 Use the `useGameHost` hook to access the game state, dispatch actions, and get the server URL (for QR codes).
 
 ```tsx
-import { useGameHost } from "@party-kit/host";
+import { useGameHost } from "@couch-kit/host";
 import QRCode from "react-native-qrcode-svg";
 import { View, Text, Button } from "react-native";
 
@@ -144,4 +144,4 @@ Important: when the controller is served from the laptop, the client-side hook c
 
 In production, the host serves static controller assets from `${RNFS.MainBundlePath}/www`.
 
-The CLI `party-kit bundle` copies your web build output into `android/app/src/main/assets/www` (default). Ensure your app packaging makes those assets available under the expected `www` folder.
+The CLI `couch-kit bundle` copies your web build output into `android/app/src/main/assets/www` (default). Ensure your app packaging makes those assets available under the expected `www` folder.

@@ -12,7 +12,7 @@ import {
   type IGameState,
   type IAction,
   type ClientMessage,
-} from "@party-kit/core";
+} from "@couch-kit/core";
 
 interface GameHostConfig<S extends IGameState, A extends IAction> {
   initialState: S;

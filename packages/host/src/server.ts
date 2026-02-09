@@ -3,14 +3,14 @@ import { StaticServer } from "react-native-nitro-http-server";
 import RNFS from "react-native-fs";
 import { getBestIpAddress } from "./network";
 
-interface PartyKitHostConfig {
+interface CouchKitHostConfig {
   port?: number;
   devMode?: boolean;
   devServerUrl?: string; // e.g. "http://localhost:5173"
   staticDir?: string; // Override the default www directory path (required on Android)
 }
 
-export const useStaticServer = (config: PartyKitHostConfig) => {
+export const useStaticServer = (config: CouchKitHostConfig) => {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
 

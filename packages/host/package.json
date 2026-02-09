@@ -1,5 +1,5 @@
 {
-  "name": "@party-kit/host",
+  "name": "@couch-kit/host",
   "version": "0.3.0",
   "main": "src/index.tsx",
   "react-native": "src/index.tsx",
@@ -25,7 +25,7 @@
     "clean": "del-cli lib"
   },
   "dependencies": {
-    "@party-kit/core": "workspace:*",
+    "@couch-kit/core": "workspace:*",
     "js-sha1": "^0.7.0",
     "react-native-fs": "^2.20.0",
     "react-native-network-info": "^5.2.1",

@@ -1,6 +1,6 @@
-# @party-kit/core
+# @couch-kit/core
 
-Shared TypeScript definitions and protocol logic for the React Native Party Kit.
+Shared TypeScript definitions and protocol logic for Couch Kit.
 
 ## Purpose
 
@@ -9,7 +9,7 @@ This package ensures that both the Host (TV) and Client (Phone) speak the exact 
 ## Installation
 
 ```bash
-bun add @party-kit/core
+bun add @couch-kit/core
 ```
 
 ## Key Exports
@@ -21,7 +21,7 @@ A helper to define type-safe reducers that can be shared between the Host and Cl
 **Important:** This wrapper automatically handles the `HYDRATE` system action, which synchronizes the client's state with the host. You do not need to implement this yourself.
 
 ```typescript
-import { createGameReducer } from "@party-kit/core";
+import { createGameReducer } from "@couch-kit/core";
 import { GameState, GameAction } from "./types";
 
 export const gameReducer = createGameReducer<GameState, GameAction>(
@@ -38,10 +38,10 @@ export const gameReducer = createGameReducer<GameState, GameAction>(
 
 ### `IGameState` & `IAction`
 
-Base interfaces that your game types should extend to ensure compatibility with the Party Kit engine.
+Base interfaces that your game types should extend to ensure compatibility with the Couch Kit engine.
 
 ```typescript
-import { IGameState, IAction } from "@party-kit/core";
+import { IGameState, IAction } from "@couch-kit/core";
 
 export interface MyState extends IGameState {
   score: number;

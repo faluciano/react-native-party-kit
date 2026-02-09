@@ -4,7 +4,7 @@
     "baseUrl": ".",
     "jsx": "react-jsx",
     "paths": {
-      "@party-kit/core": ["../core/src"]
+      "@couch-kit/core": ["../core/src"]
     }
   },
   "include": ["src/**/*", "../core/src/**/*"]

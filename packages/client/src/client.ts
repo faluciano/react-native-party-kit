@@ -194,7 +194,6 @@ export function useGameClient<S extends IGameState, A extends IAction>(
     };
     // Only re-create the connect function when URL/port actually changes.
     // Config values like name, avatar, callbacks are read from configRef.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.url, config.wsPort, maxRetries, baseDelay, maxDelay]);
 
   // Initial Connection

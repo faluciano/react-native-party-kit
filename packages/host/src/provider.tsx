@@ -262,7 +262,6 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
     return () => {
       server.stop();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
   // 3. Broadcast State Updates

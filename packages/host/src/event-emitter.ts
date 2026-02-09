@@ -16,12 +16,12 @@
  * ```
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export class EventEmitter<
   EventMap extends Record<string, any[]> = Record<string, any[]>,
 > {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private listeners: Map<string, Array<(...args: any[]) => void>> = new Map();
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   on<K extends string & keyof EventMap>(
     event: K,

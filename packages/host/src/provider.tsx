@@ -14,6 +14,7 @@ import {
   InternalActionTypes,
   DEFAULT_HTTP_PORT,
   DEFAULT_WS_PORT_OFFSET,
+  createGameReducer,
   type IGameState,
   type IAction,
   type InternalAction,
@@ -22,7 +23,7 @@ import {
 
 export interface GameHostConfig<S extends IGameState, A extends IAction> {
   initialState: S;
-  reducer: (state: S, action: A | InternalAction<S>) => S;
+  reducer: (state: S, action: A) => S;
   port?: number; // Static server port (default 8080)
   wsPort?: number; // WebSocket port (default: HTTP port + 2, i.e. 8082)
   devMode?: boolean;
@@ -39,7 +40,7 @@ export interface GameHostConfig<S extends IGameState, A extends IAction> {
 
 interface GameHostContextValue<S extends IGameState, A extends IAction> {
   state: S;
-  dispatch: (action: A | InternalAction<S>) => void;
+  dispatch: (action: A) => void;
   serverUrl: string | null;
   serverError: Error | null;
 }
@@ -93,7 +94,12 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
   children: React.ReactNode;
   config: GameHostConfig<S, A>;
 }) {
-  const [state, dispatch] = useReducer(config.reducer, config.initialState);
+  // Wrap the user's reducer with createGameReducer to handle internal actions
+  // (HYDRATE, PLAYER_JOINED, PLAYER_LEFT) automatically.
+  const [state, dispatch] = useReducer(
+    createGameReducer(config.reducer),
+    config.initialState,
+  );
 
   // Keep a ref to state so we can access it inside callbacks/effects that don't depend on it
   const stateRef = useRef(state);

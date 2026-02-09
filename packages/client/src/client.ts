@@ -18,7 +18,7 @@ import { useServerTime } from "./time-sync";
 export interface ClientConfig<S extends IGameState, A extends IAction> {
   url?: string; // Full WebSocket URL (overrides auto-detection)
   wsPort?: number; // WebSocket port (default: auto-detected as HTTP port + 2)
-  reducer: (state: S, action: A | InternalAction<S>) => S;
+  reducer: (state: S, action: A) => S;
   initialState: S;
   name?: string; // Player display name (default: "Player")
   avatar?: string; // Player avatar emoji (default: "\u{1F600}")

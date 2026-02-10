@@ -25,7 +25,7 @@ Turn an Android TV / Fire TV into a local party-game console and use phones as w
 - **Devices:** Android TV / Fire TV (host). Phones run any modern mobile browser (client).
 - **Network:** TV + phones on the same LAN/Wi-Fi. This is not an internet relay.
 - **Ports:** `8080` (HTTP) and `8082` (WebSocket) reachable on the LAN (configurable).
-- **Native deps:** `@couch-kit/host` uses React Native native modules; it is not a pure-JS package.
+- **Native deps:** `@couch-kit/host` requires Expo modules and React Native native modules; it is not a pure-JS package.
 
 ## Non-goals
 
@@ -53,6 +53,10 @@ bun init
 
 # For the TV App (Host)
 bun add @couch-kit/host @couch-kit/core
+
+# Install required peer dependencies
+npx expo install expo-file-system expo-network
+bun add react-native-tcp-socket
 ```
 
 If you are setting up the Web Controller manually (instead of using the CLI in Step 4):

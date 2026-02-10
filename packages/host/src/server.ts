@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { StaticServer } from "react-native-nitro-http-server";
-import RNFS from "react-native-fs";
+import { Paths } from "expo-file-system";
 import { getBestIpAddress } from "./network";
 import { DEFAULT_HTTP_PORT, toErrorMessage } from "@couch-kit/core";
 
@@ -15,7 +15,8 @@ export interface CouchKitHostConfig {
  * React hook that manages a static HTTP file server for serving the web controller.
  *
  * In production mode, starts a `StaticServer` bound to `0.0.0.0` on the configured port,
- * serving files from `staticDir` (or `${RNFS.MainBundlePath}/www` by default).
+ * serving files from `staticDir` (or the iOS bundle directory + `/www` by default).
+ * On Android, `staticDir` must be provided since bundle assets live inside the APK.
  * In dev mode, skips the server and returns `devServerUrl` directly.
  *
  * @param config - Server configuration including port, dev mode, and static directory.
@@ -48,9 +49,11 @@ export const useStaticServer = (config: CouchKitHostConfig) => {
 
       // Production Mode: Serve assets from bundle
       try {
-        // Use staticDir if provided (required on Android where MainBundlePath is undefined),
-        // otherwise fall back to iOS MainBundlePath
-        const path = config.staticDir || `${RNFS.MainBundlePath}/www`;
+        // Use staticDir if provided (required on Android where bundle path is undefined),
+        // otherwise fall back to the iOS bundle directory via expo-file-system
+        const path =
+          config.staticDir ||
+          `${Paths.bundle.uri.replace(/^file:\/\//, "")}www`;
         const port = config.port || DEFAULT_HTTP_PORT;
 
         server = new StaticServer();

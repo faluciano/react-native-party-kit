@@ -22,7 +22,14 @@ The server-side library for React Native TV applications. This package turns you
 bun add @couch-kit/host
 ```
 
-> **Note:** This library includes native dependencies (`react-native-tcp-socket`, `react-native-fs`, etc.). React Native's autolinking will handle the setup for Android. Ensure your `android/build.gradle` is configured correctly if you encounter build issues.
+Then install the required peer dependencies:
+
+```bash
+npx expo install expo-file-system expo-network
+bun add react-native-tcp-socket
+```
+
+> **Note:** This library requires Expo modules (`expo-file-system`, `expo-network`) and `react-native-tcp-socket` as peer dependencies. These must be installed in your consumer app. React Native's autolinking will handle native setup automatically.
 
 ## Compatibility
 
@@ -31,6 +38,12 @@ bun add @couch-kit/host
 | `react`                      | `>= 18.2.0`     |
 | `react-native`               | `>= 0.72.0`     |
 | `react-native-nitro-modules` | `>= 0.33.0`     |
+| `expo`                       | `>= 51.0.0`     |
+| `expo-file-system`           | `>= 17.0.0`     |
+| `expo-network`               | `>= 7.0.0`      |
+| `react-native-tcp-socket`    | `>= 6.0.0`      |
+
+> **New Architecture:** This package supports React Native's New Architecture (Fabric/TurboModules) via React Native 0.83+.
 
 ## Usage
 
@@ -44,7 +57,7 @@ Config:
 - `reducer`: `(state, action) => state` (shared reducer)
 - `port?`: HTTP static server port (default `8080`)
 - `wsPort?`: WebSocket game server port (default `8082`)
-- `staticDir?`: absolute path to the directory of static files to serve. On Android, APK assets live inside a zip archive and cannot be served directly — use this to point to a writable filesystem path where you've extracted the `www/` assets at runtime. Defaults to `${RNFS.MainBundlePath}/www`.
+- `staticDir?`: absolute path to the directory of static files to serve. **Required on Android** — APK assets live inside a zip archive and cannot be served directly, so use this to point to a writable filesystem path where you've extracted the `www/` assets at runtime. On iOS, defaults to the bundle directory + `/www`.
 - `devMode?`: if true, do not start the TV static file server; instead point phones at `devServerUrl`
 - `devServerUrl?`: URL of your laptop dev server (e.g. `http://192.168.1.50:5173`)
 - `debug?`: enable verbose logs
@@ -156,6 +169,6 @@ Important: when the controller is served from the laptop, the client-side hook c
 
 ## Bundling / Assets
 
-In production, the host serves static controller assets from `${RNFS.MainBundlePath}/www`.
+In production, the host serves static controller assets from the iOS bundle directory + `/www` by default. On Android, `staticDir` must be provided since bundle assets live inside the APK.
 
 The CLI `couch-kit bundle` copies your web build output into `android/app/src/main/assets/www` (default). Ensure your app packaging makes those assets available under the expected `www` folder.

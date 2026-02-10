@@ -1,4 +1,4 @@
-import { NetworkInfo } from "react-native-network-info";
+import * as Network from "expo-network";
 
 /**
  * Smart IP Discovery
@@ -7,15 +7,11 @@ import { NetworkInfo } from "react-native-network-info";
  */
 export async function getBestIpAddress(): Promise<string | null> {
   try {
-    // 1. Try to get the standard IP address (usually WiFi)
-    const ip = await NetworkInfo.getIPV4Address();
+    const ip = await Network.getIpAddressAsync();
 
     if (ip && ip !== "0.0.0.0" && ip !== "127.0.0.1") {
       return ip;
     }
-
-    // Fallback logic could go here (e.g., iterating interfaces if exposed by a native module)
-    // For now, react-native-network-info is the standard abstraction.
 
     return null;
   } catch (error) {

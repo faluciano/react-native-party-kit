@@ -51,9 +51,9 @@ export const useStaticServer = (config: CouchKitHostConfig) => {
       try {
         // Use staticDir if provided (required on Android where bundle path is undefined),
         // otherwise fall back to the iOS bundle directory via expo-file-system
+        const bundleUri = Paths.bundle.uri;
         const path =
-          config.staticDir ||
-          `${Paths.bundle.uri.replace(/^file:\/\//, "")}www`;
+          config.staticDir || `${bundleUri.replace(/^file:\/\//, "")}www`;
         const port = config.port || DEFAULT_HTTP_PORT;
 
         server = new StaticServer();

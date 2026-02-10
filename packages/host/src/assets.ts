@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  documentDirectory,
-  getInfoAsync,
-  deleteAsync,
-  makeDirectoryAsync,
-  copyAsync,
-} from "expo-file-system/legacy";
+import { Paths, Directory, File } from "expo-file-system";
 import { Platform } from "react-native";
 import { toErrorMessage } from "@couch-kit/core";
 
@@ -28,7 +22,7 @@ export interface ExtractAssetsResult {
  *
  * On Android, assets live inside the APK and cannot be served directly by
  * a native HTTP server. This hook copies each file listed in the manifest
- * from `asset:///www/<file>` to `${documentDirectory}www/<file>`.
+ * from `asset:///www/<file>` to `<Paths.document>/www/<file>`.
  *
  * On iOS, assets are accessible from the bundle directory, so extraction
  * is skipped and `staticDir` is returned as `undefined` (the server falls
@@ -53,42 +47,41 @@ export function useExtractAssets(manifest: AssetManifest): ExtractAssetsResult {
 
     const extractAssets = async () => {
       try {
-        if (!documentDirectory) {
-          throw new Error("Document directory is not available");
-        }
-
-        const targetDir = `${documentDirectory}www/`;
+        const documentDir = Paths.document;
+        const targetDir = new Directory(documentDir, "www");
 
         // Clean previous extraction to ensure fresh assets after app updates
-        const dirInfo = await getInfoAsync(targetDir);
-        if (dirInfo.exists) {
-          await deleteAsync(targetDir, { idempotent: true });
+        if (targetDir.exists) {
+          targetDir.delete();
         }
 
         // Create the root target directory
-        await makeDirectoryAsync(targetDir, { intermediates: true });
+        targetDir.create({ intermediates: true });
 
         // Copy each file from APK assets to filesystem
-        for (const file of manifest.files) {
+        for (const filePath of manifest.files) {
           if (cancelled) return;
 
-          const sourceUri = `asset:///www/${file}`;
-          const destUri = `${targetDir}${file}`;
+          const sourceFile = new File(`asset:///www/${filePath}`);
+          const destFile = new File(targetDir, filePath);
 
           // Ensure subdirectory exists (e.g., "assets/" in "assets/index.js")
-          const lastSlash = file.lastIndexOf("/");
+          const lastSlash = filePath.lastIndexOf("/");
           if (lastSlash > 0) {
-            const subDir = `${targetDir}${file.substring(0, lastSlash)}`;
-            await makeDirectoryAsync(subDir, { intermediates: true });
+            const subDir = new Directory(
+              targetDir,
+              filePath.substring(0, lastSlash),
+            );
+            subDir.create({ intermediates: true, idempotent: true });
           }
 
-          await copyAsync({ from: sourceUri, to: destUri });
+          sourceFile.copy(destFile);
         }
 
         if (cancelled) return;
 
         // Strip file:// prefix for the native HTTP server
-        const rawPath = targetDir.replace(/^file:\/\//, "");
+        const rawPath = targetDir.uri.replace(/^file:\/\//, "");
         setStaticDir(rawPath);
       } catch (e) {
         if (!cancelled) {

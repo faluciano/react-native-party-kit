@@ -2,6 +2,9 @@
  * Minimal type definition for the raw TCP socket provided by react-native-tcp-socket.
  * Covers only the API surface used by GameWebSocketServer.
  */
+
+import type { Buffer } from "buffer";
+
 export interface TcpSocketInstance {
   write(data: string | Buffer): void;
   destroy(): void;

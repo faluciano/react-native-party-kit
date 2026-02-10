@@ -23,6 +23,10 @@ program
     "./android/app/src/main/assets/www",
   )
   .option("--no-build", "Skip build step (just copy)")
+  .option(
+    "-m, --manifest <path>",
+    "Also write manifest to this path for import in app source",
+  )
   .action(async (options) => {
     const { bundleCommand } = await import("./commands/bundle");
     await bundleCommand.parseAsync(["bundle", ...reconstructArgs(options)], {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Paths, Directory, File } from "expo-file-system";
+import { Paths, Directory, File } from "expo-file-system/next";
 import { Platform } from "react-native";
 import { toErrorMessage } from "@couch-kit/core";
 

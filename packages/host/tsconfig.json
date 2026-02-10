@@ -4,7 +4,10 @@
     "baseUrl": ".",
     "jsx": "react",
     "paths": {
-      "@couch-kit/core": ["../core/src"]
+      "@couch-kit/core": ["../core/src"],
+      "expo-file-system/next": [
+        "./node_modules/expo-file-system/build/index.d.ts"
+      ]
     }
   },
   "include": ["src/**/*", "../core/src/**/*"]

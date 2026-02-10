@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { StaticServer } from "react-native-nitro-http-server";
-import { Paths } from "expo-file-system";
+import { Paths } from "expo-file-system/next";
 import { getBestIpAddress } from "./network";
 import { DEFAULT_HTTP_PORT, toErrorMessage } from "@couch-kit/core";
 

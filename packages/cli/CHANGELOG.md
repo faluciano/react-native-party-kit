@@ -1,5 +1,12 @@
 # @couch-kit/cli
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @couch-kit/core@0.3.3
+
 ## 0.1.1
 
 ### Patch Changes

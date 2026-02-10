@@ -1,5 +1,20 @@
 # @couch-kit/core
 
+## 0.3.3
+
+### Patch Changes
+
+- Improve type safety, error handling, and test coverage
+  - Eliminated `any` types in host WebSocket server with proper `TcpSocketInstance` interface
+  - Replaced 7 empty catch blocks with contextual debug logging
+  - Fixed stale closure bug in `useGameClient` hook (`handlePong` ref pattern)
+  - Added 34 tests for host package (EventEmitter + buffer utilities)
+  - Extracted buffer utilities into standalone module for testability
+  - Added `.prettierrc` configuration
+  - Fixed React type version mismatch (`@types/react` 19 → 18)
+  - Pinned `@types/bun` to deterministic version range
+  - Tightened host peer dependencies from wildcards to minimum versions
+
 ## 0.3.2
 
 ### Patch Changes

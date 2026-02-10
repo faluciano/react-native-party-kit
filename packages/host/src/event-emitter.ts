@@ -75,7 +75,10 @@ export class EventEmitter<
       try {
         listener(...args);
       } catch (error) {
-        console.error(`Error in event listener for "${event}":`, error);
+        console.error(
+          `[EventEmitter] Error in listener for "${String(event)}":`,
+          error,
+        );
       }
     }
     return true;

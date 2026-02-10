@@ -80,6 +80,11 @@ export function useGameClient<S extends IGameState, A extends IAction>(
   // Time Sync Hook
   const { getServerTime, rtt, handlePong } = useServerTime(socketRef.current);
 
+  const handlePongRef = useRef(handlePong);
+  useEffect(() => {
+    handlePongRef.current = handlePong;
+  });
+
   const maxRetries = config.maxRetries ?? DEFAULT_MAX_RETRIES;
   const baseDelay = config.baseDelay ?? DEFAULT_BASE_DELAY;
   const maxDelay = config.maxDelay ?? DEFAULT_MAX_DELAY;
@@ -172,7 +177,7 @@ export function useGameClient<S extends IGameState, A extends IAction>(
             break;
 
           case MessageTypes.PONG:
-            handlePong(msg.payload);
+            handlePongRef.current(msg.payload);
             break;
         }
       } catch (e) {

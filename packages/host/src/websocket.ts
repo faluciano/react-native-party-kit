@@ -7,6 +7,7 @@
  */
 
 import TcpSocket from "react-native-tcp-socket";
+import type { TcpSocketInstance } from "./declarations";
 import { EventEmitter } from "./event-emitter";
 import { Buffer } from "buffer";
 import { sha1 } from "js-sha1";
@@ -16,6 +17,8 @@ import {
   KEEPALIVE_INTERVAL,
   KEEPALIVE_TIMEOUT,
 } from "@couch-kit/core";
+import { appendToBuffer, compactBuffer } from "./buffer-utils";
+import type { ManagedSocket } from "./buffer-utils";
 
 export interface WebSocketConfig {
   port: number;
@@ -53,57 +56,10 @@ const GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 /** Initial capacity for per-client receive buffers. */
 const INITIAL_BUFFER_CAPACITY = 4096;
 
-/**
- * Append data to a managed socket's buffer, growing capacity geometrically
- * to avoid re-allocation on every TCP data event.
- */
-function appendToBuffer(managed: ManagedSocket, data: Buffer): void {
-  const needed = managed.bufferLength + data.length;
-
-  if (needed > managed.buffer.length) {
-    // Grow by at least 2x or to fit the new data, whichever is larger
-    const newCapacity = Math.max(managed.buffer.length * 2, needed);
-    const grown = Buffer.alloc(newCapacity);
-    managed.buffer.copy(grown, 0, 0, managed.bufferLength);
-    managed.buffer = grown;
-  }
-
-  data.copy(managed.buffer, managed.bufferLength);
-  managed.bufferLength = needed;
-}
-
-/**
- * Compact the buffer by discarding consumed bytes from the front.
- * If all data has been consumed, reset the length to 0 without re-allocating.
- */
-function compactBuffer(managed: ManagedSocket, consumed: number): void {
-  const remaining = managed.bufferLength - consumed;
-  if (remaining <= 0) {
-    managed.bufferLength = 0;
-    return;
-  }
-  // Shift remaining bytes to the front of the existing buffer
-  managed.buffer.copy(managed.buffer, 0, consumed, managed.bufferLength);
-  managed.bufferLength = remaining;
-}
-
 interface DecodedFrame {
   opcode: number;
   payload: Buffer;
   bytesConsumed: number;
-}
-
-// Internal type for a TCP socket with our added management properties.
-// We use `any` for the raw socket since react-native-tcp-socket doesn't export a clean type.
-interface ManagedSocket {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  socket: any;
-  id: string;
-  isHandshakeComplete: boolean;
-  buffer: Buffer;
-  /** Number of valid bytes currently in `buffer` (may be less than buffer.length). */
-  bufferLength: number;
-  lastPong: number;
 }
 
 export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
@@ -134,11 +90,11 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
   public start() {
     this.log(`[WebSocket] Starting server on port ${this.port}...`);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.server = TcpSocket.createServer((rawSocket: any) => {
-      this.log(
-        `[WebSocket] New connection from ${rawSocket.address?.()?.address}`,
-      );
+    this.server = TcpSocket.createServer((rawSocket: TcpSocketInstance) => {
+      const addrInfo = rawSocket.address();
+      const remoteAddr =
+        addrInfo && "address" in addrInfo ? addrInfo.address : "unknown";
+      this.log(`[WebSocket] New connection from ${remoteAddr}`);
 
       const managed: ManagedSocket = {
         socket: rawSocket,
@@ -227,8 +183,11 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
           this.log(`[WebSocket] Keepalive timeout for ${id}, disconnecting`);
           try {
             managed.socket.destroy();
-          } catch {
-            // Already destroyed
+          } catch (error) {
+            this.log(
+              "[WebSocket] Socket already destroyed during keepalive cleanup:",
+              error,
+            );
           }
           this.clients.delete(id);
           this.emit("disconnect", id);
@@ -237,8 +196,8 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
 
         try {
           managed.socket.write(pingFrame);
-        } catch {
-          // Socket already closing
+        } catch (error) {
+          this.log("[WebSocket] Failed to send keepalive ping:", error);
         }
       }
     }, this.keepaliveInterval);
@@ -258,8 +217,11 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
         this.log(`[WebSocket] Frame error from ${managed.id}:`, error);
         try {
           managed.socket.destroy();
-        } catch {
-          // Already destroyed
+        } catch (destroyError) {
+          this.log(
+            "[WebSocket] Socket already destroyed after frame error:",
+            destroyError,
+          );
         }
         return;
       }
@@ -278,10 +240,11 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
           try {
             const message = JSON.parse(frame.payload.toString("utf8"));
             this.emit("message", managed.id, message);
-          } catch {
+          } catch (error) {
             // Corrupt JSON in a complete frame -- discard this frame, continue processing
             this.log(
-              `[WebSocket] Invalid JSON from ${managed.id}, discarding frame`,
+              `[WebSocket] Invalid JSON from ${managed.id}, discarding frame:`,
+              error,
             );
           }
           break;
@@ -295,8 +258,8 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
           closeFrame[1] = 0x00; // No payload
           try {
             managed.socket.write(closeFrame);
-          } catch {
-            // Socket may already be closing
+          } catch (error) {
+            this.log("[WebSocket] Failed to send close frame:", error);
           }
           managed.socket.destroy();
           break;
@@ -308,8 +271,8 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
           const pongFrame = this.encodeControlFrame(OPCODE.PONG, frame.payload);
           try {
             managed.socket.write(pongFrame);
-          } catch {
-            // Socket may be closing
+          } catch (error) {
+            this.log("[WebSocket] Failed to send pong:", error);
           }
           break;
         }
@@ -365,13 +328,19 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
       this.clients.forEach((managed) => {
         try {
           managed.socket.write(closeFrame);
-        } catch {
-          // Socket may already be closing
+        } catch (error) {
+          this.log(
+            "[WebSocket] Failed to send close frame during shutdown:",
+            error,
+          );
         }
         try {
           managed.socket.destroy();
-        } catch {
-          // Already destroyed
+        } catch (error) {
+          this.log(
+            "[WebSocket] Socket already destroyed during shutdown:",
+            error,
+          );
         }
       });
 
@@ -425,7 +394,6 @@ export class GameWebSocketServer extends EventEmitter<WebSocketServerEvents> {
 
   // --- Private Helpers ---
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleHandshake(managed: ManagedSocket, header: string) {
     this.log("[WebSocket] Handshake request header:", JSON.stringify(header));
     const keyMatch = header.match(/Sec-WebSocket-Key: (.+)/);

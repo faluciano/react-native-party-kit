@@ -1,5 +1,11 @@
 # @couch-kit/client
 
+## 0.5.1
+
+### Patch Changes
+
+- Fix duplicate React bundling by marking react and @couch-kit/core as external in build
+
 ## 0.5.0
 
 ### Minor Changes

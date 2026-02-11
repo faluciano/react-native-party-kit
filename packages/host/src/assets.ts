@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Paths, Directory, File } from "expo-file-system/next";
+import * as FileSystem from "expo-file-system";
+import { Paths, Directory } from "expo-file-system/next";
 import { Platform } from "react-native";
 import { toErrorMessage } from "@couch-kit/core";
 
@@ -62,8 +63,8 @@ export function useExtractAssets(manifest: AssetManifest): ExtractAssetsResult {
         for (const filePath of manifest.files) {
           if (cancelled) return;
 
-          const sourceFile = new File(`asset:///www/${filePath}`);
-          const destFile = new File(targetDir, filePath);
+          const sourceUri = `asset:///www/${filePath}`;
+          const destUri = `${targetDir.uri}${filePath}`;
 
           // Ensure subdirectory exists (e.g., "assets/" in "assets/index.js")
           const lastSlash = filePath.lastIndexOf("/");
@@ -77,7 +78,9 @@ export function useExtractAssets(manifest: AssetManifest): ExtractAssetsResult {
             }
           }
 
-          sourceFile.copy(destFile);
+          // Use legacy API — the new File API doesn't support asset:// URIs
+          // on Android because it bypasses the AssetManager
+          await FileSystem.copyAsync({ from: sourceUri, to: destUri });
         }
 
         if (cancelled) return;

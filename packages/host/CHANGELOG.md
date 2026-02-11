@@ -1,5 +1,11 @@
 # @couch-kit/host
 
+## 1.2.4
+
+### Patch Changes
+
+- Fix Android asset extraction by using legacy FileSystem.copyAsync for asset:// URIs, which supports the Android AssetManager
+
 ## 1.2.3
 
 ### Patch Changes

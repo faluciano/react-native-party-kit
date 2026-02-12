@@ -40,7 +40,7 @@ Returns:
 
 - `status`: `'connecting' | 'connected' | 'disconnected' | 'error'`
 - `state`: current controller state (optimistic + hydrated)
-- `playerId`: server-assigned player id (after `WELCOME`)
+- `playerId`: stable public identifier derived from the session secret. Persists across page refreshes and reconnections (the same player always gets the same `playerId`).
 - `sendAction(action)`: optimistic dispatch + send to host
 - `getServerTime()`: NTP-ish server time based on periodic ping/pong
 - `rtt`: round-trip time (ms) to the server, updated periodically via PING/PONG
@@ -94,7 +94,7 @@ export default function Controller() {
   const {
     status, // 'connecting' | 'connected' | 'disconnected' | 'error'
     state, // The current game state (synced with Host)
-    playerId, // Your unique session ID
+    playerId, // Stable identifier, persists across reconnections
     sendAction, // Function to send actions to Host
   } = useGameClient({
     reducer: gameReducer,

@@ -179,6 +179,14 @@ export function useGameClient<S extends IGameState, A extends IAction>(
           case MessageTypes.PONG:
             handlePongRef.current(msg.payload);
             break;
+
+          case MessageTypes.RECONNECTED:
+            setPlayerId(msg.payload.playerId);
+            dispatchLocal({
+              type: InternalActionTypes.HYDRATE,
+              payload: msg.payload.state as S,
+            } as InternalAction<S>);
+            break;
         }
       } catch (e) {
         console.error("Failed to parse message", e);

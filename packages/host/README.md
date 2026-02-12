@@ -73,12 +73,16 @@ Returns:
 
 ## System Actions
 
-The host automatically dispatches internal system actions (`__PLAYER_JOINED__`, `__PLAYER_LEFT__`, `__HYDRATE__`) into `createGameReducer`, which handles them for you. **You do not need to handle these in your reducer.**
+The host automatically dispatches internal system actions (`__PLAYER_JOINED__`, `__PLAYER_LEFT__`, `__PLAYER_RECONNECTED__`, `__PLAYER_REMOVED__`, `__HYDRATE__`) into `createGameReducer`, which handles them for you. **You do not need to handle these in your reducer.**
 
 Player tracking (`state.players`) is managed automatically:
 
 - When a player joins, they are added to `state.players` with `connected: true`.
 - When a player disconnects, they are marked as `connected: false`.
+- If a player reconnects from the same device/browser, they are automatically reassigned their previous player data via `__PLAYER_RECONNECTED__` (sets `connected: true`, preserves hand, score, etc.).
+- If a disconnected player does not reconnect within the timeout window (default: 5 minutes), they are permanently removed from `state.players` via `__PLAYER_REMOVED__`.
+
+Game logic that iterates over `state.players` should account for players being removed after the timeout.
 
 To react to player events outside of state (e.g., logging, analytics), use the callback config options:
 

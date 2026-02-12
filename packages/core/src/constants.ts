@@ -63,6 +63,25 @@ export function generateId(): string {
 }
 
 /**
+ * Validates that a string looks like a UUID (with or without dashes, 32+ hex chars).
+ */
+export function isValidSecret(secret: string): boolean {
+  const hex = secret.replace(/-/g, "");
+  return hex.length >= 32 && /^[0-9a-f]+$/i.test(hex);
+}
+
+/**
+ * Derives a stable, public player ID from a secret UUID.
+ *
+ * Strips dashes and takes the first 16 hex characters. This is NOT a
+ * cryptographic hash — it simply avoids exposing the raw secret in
+ * state that gets broadcast to all clients.
+ */
+export function derivePlayerId(secret: string): string {
+  return secret.replace(/-/g, "").slice(0, 16);
+}
+
+/**
  * Safely extract an error message from an unknown caught value.
  * In JavaScript, anything can be thrown -- this normalizes it.
  */

@@ -2,7 +2,7 @@
 export type ClientMessage =
   | {
       type: "JOIN";
-      payload: { name: string; avatar?: string; secret?: string };
+      payload: { name: string; avatar?: string; secret: string };
     }
   | { type: "ACTION"; payload: { type: string; payload?: unknown } }
   | { type: "PING"; payload: { id: string; timestamp: number } }
@@ -22,7 +22,7 @@ export type HostMessage =
       type: "PONG";
       payload: { id: string; origTimestamp: number; serverTime: number };
     }
-  | { type: "RECONNECTED"; payload: { state: unknown } }
+  | { type: "RECONNECTED"; payload: { playerId: string; state: unknown } }
   | { type: "ERROR"; payload: { code: string; message: string } };
 
 export const MessageTypes = {

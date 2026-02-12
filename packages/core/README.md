@@ -21,6 +21,8 @@ A higher-order reducer that wraps your game reducer with automatic handling of i
 - `__HYDRATE__` -- Replaces state wholesale (used for server-to-client state sync).
 - `__PLAYER_JOINED__` -- Adds a player to `state.players`.
 - `__PLAYER_LEFT__` -- Marks a player as disconnected in `state.players`.
+- `__PLAYER_RECONNECTED__` -- Dispatched when a returning player reconnects with a valid session. Sets `connected: true` and preserves all existing player data.
+- `__PLAYER_REMOVED__` -- Dispatched when a disconnected player times out (default: 5 minutes). Permanently removes the player from `state.players`.
 
 **You do not need to call this yourself.** Both `GameHostProvider` and `useGameClient` wrap your reducer automatically. Just write a plain reducer that handles your own action types:
 

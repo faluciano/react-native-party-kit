@@ -15,6 +15,8 @@ import {
   DEFAULT_HTTP_PORT,
   DEFAULT_WS_PORT_OFFSET,
   createGameReducer,
+  derivePlayerId,
+  isValidSecret,
   type IGameState,
   type IAction,
   type InternalAction,
@@ -130,12 +132,12 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
     if (!wsServer.current) return;
 
     const server = wsServer.current;
-    for (const [socketId] of pendingWelcome.current) {
+    for (const [socketId, playerId] of pendingWelcome.current) {
       welcomedClients.current.add(socketId);
       server.send(socketId, {
         type: MessageTypes.WELCOME,
         payload: {
-          playerId: socketId,
+          playerId,
           state,
           serverTime: Date.now(),
         },
@@ -162,8 +164,16 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
   // 2. Start WebSocket Server (Convention: HTTP port + 2, avoids Metro on 8081)
   const wsServer = useRef<GameWebSocketServer | null>(null);
 
-  // Track active sessions: secret -> playerId
+  // Track active sessions: secret -> socketId
   const sessions = useRef<Map<string, string>>(new Map());
+
+  // Reverse lookup: socketId -> secret (for disconnect resolution)
+  const reverseMap = useRef<Map<string, string>>(new Map());
+
+  // Stale player cleanup timers: playerId -> timer
+  const cleanupTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
 
   // Track socket IDs that have received their WELCOME message
   const welcomedClients = useRef<Set<string>>(new Set());
@@ -212,22 +222,51 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
         case MessageTypes.JOIN: {
           const { secret, ...payload } = message.payload;
 
-          if (secret) {
-            // Update the session map with the new socket ID for this secret
-            sessions.current.set(secret, socketId);
+          // Validate secret format
+          if (!secret || !isValidSecret(secret)) {
+            server.send(socketId, {
+              type: MessageTypes.ERROR,
+              payload: {
+                code: "INVALID_SECRET",
+                message: "Invalid or missing session secret",
+              },
+            });
+            return;
           }
 
-          // Dispatch the internal PLAYER_JOINED action
-          dispatch({
-            type: InternalActionTypes.PLAYER_JOINED,
-            payload: { id: socketId, ...payload },
-          } as InternalAction<S>);
+          const playerId = derivePlayerId(secret);
 
-          // Queue WELCOME to be sent after React re-renders and stateRef is updated.
-          // A useEffect watches for pending welcomes and sends them with fresh state.
-          pendingWelcome.current.set(socketId, socketId);
+          // Update session maps
+          sessions.current.set(secret, socketId);
+          reverseMap.current.set(socketId, secret);
 
-          configRef.current.onPlayerJoined?.(socketId, payload.name);
+          // Cancel any pending cleanup timer for this player
+          const existingTimer = cleanupTimers.current.get(playerId);
+          if (existingTimer) {
+            clearTimeout(existingTimer);
+            cleanupTimers.current.delete(playerId);
+          }
+
+          // Check if this is a returning player
+          const existingPlayer = stateRef.current.players[playerId];
+          if (existingPlayer) {
+            // Reconnection — restore existing player
+            dispatch({
+              type: InternalActionTypes.PLAYER_RECONNECTED,
+              payload: { playerId },
+            } as InternalAction<S>);
+          } else {
+            // New player
+            dispatch({
+              type: InternalActionTypes.PLAYER_JOINED,
+              payload: { id: playerId, ...payload },
+            } as InternalAction<S>);
+          }
+
+          // Queue WELCOME
+          pendingWelcome.current.set(socketId, playerId);
+
+          configRef.current.onPlayerJoined?.(playerId, payload.name);
           break;
         }
 
@@ -238,7 +277,9 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
           if (
             actionPayload.type === InternalActionTypes.HYDRATE ||
             actionPayload.type === InternalActionTypes.PLAYER_JOINED ||
-            actionPayload.type === InternalActionTypes.PLAYER_LEFT
+            actionPayload.type === InternalActionTypes.PLAYER_LEFT ||
+            actionPayload.type === InternalActionTypes.PLAYER_RECONNECTED ||
+            actionPayload.type === InternalActionTypes.PLAYER_REMOVED
           ) {
             if (configRef.current.debug)
               console.warn(
@@ -255,7 +296,12 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
             });
             return;
           }
-          dispatch(actionPayload);
+          // Resolve playerId from socketId
+          const actionSecret = reverseMap.current.get(socketId);
+          const resolvedPlayerId = actionSecret
+            ? derivePlayerId(actionSecret)
+            : undefined;
+          dispatch({ ...actionPayload, playerId: resolvedPlayerId });
           break;
         }
 
@@ -278,15 +324,41 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
 
       welcomedClients.current.delete(socketId);
 
-      // We do NOT remove the session from the map here,
-      // allowing them to reconnect later with the same secret.
+      // Resolve socketId -> secret -> playerId
+      const secret = reverseMap.current.get(socketId);
+      reverseMap.current.delete(socketId);
 
+      if (!secret) return; // Unknown socket, nothing to do
+
+      const playerId = derivePlayerId(secret);
+
+      // RACE GUARD: Only mark as left if this socket is still the active one for this secret
+      if (sessions.current.get(secret) !== socketId) {
+        // Player already reconnected on a newer socket — skip
+        return;
+      }
+
+      // Mark disconnected (don't remove from sessions — allow reconnect)
       dispatch({
         type: InternalActionTypes.PLAYER_LEFT,
-        payload: { playerId: socketId },
+        payload: { playerId },
       } as InternalAction<S>);
 
-      configRef.current.onPlayerLeft?.(socketId);
+      configRef.current.onPlayerLeft?.(playerId);
+
+      // Start stale player cleanup timer (5 minutes default)
+      const timer = setTimeout(
+        () => {
+          cleanupTimers.current.delete(playerId);
+          sessions.current.delete(secret);
+          dispatch({
+            type: InternalActionTypes.PLAYER_REMOVED,
+            payload: { playerId },
+          } as InternalAction<S>);
+        },
+        5 * 60 * 1000,
+      );
+      cleanupTimers.current.set(playerId, timer);
     });
 
     server.on("error", (error) => {
@@ -297,6 +369,10 @@ export function GameHostProvider<S extends IGameState, A extends IAction>({
 
     return () => {
       server.stop();
+      for (const timer of cleanupTimers.current.values()) {
+        clearTimeout(timer);
+      }
+      cleanupTimers.current.clear();
     };
   }, []); // Run once on mount
 

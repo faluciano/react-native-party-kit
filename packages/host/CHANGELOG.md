@@ -1,5 +1,33 @@
 # @couch-kit/host
 
+## 1.3.0
+
+### Minor Changes
+
+- Fix player state not restored on page refresh
+
+  Players now maintain their identity across page refreshes and network reconnections. The library uses a stable player ID derived from a persistent session secret (stored in localStorage) instead of the ephemeral WebSocket socket ID.
+
+  **New features:**
+  - `__PLAYER_RECONNECTED__` internal action: dispatched when a returning player reconnects, preserving all game data (hand, score, turn, etc.)
+  - `__PLAYER_REMOVED__` internal action: dispatched when a disconnected player times out (default: 5 minutes), permanently removing them from state
+  - Race-safe disconnect handling: prevents marking a player as disconnected if they've already reconnected on a new socket
+  - Secret validation: malformed session secrets are rejected at the JOIN boundary
+
+  **Breaking changes:**
+  - `state.players` keys are now stable derived player IDs instead of ephemeral socket IDs
+  - `playerId` returned by `useGameClient()` and sent in `WELCOME` messages is now a stable identifier that persists across reconnections
+  - `secret` field in `JOIN` payload is now required (was optional)
+
+  **Security:**
+  - Raw session secret is never stored on `IPlayer` or broadcast to clients
+  - Only the derived public player ID is shared in game state
+
+### Patch Changes
+
+- Updated dependencies
+  - @couch-kit/core@0.5.0
+
 ## 1.2.7
 
 ### Patch Changes

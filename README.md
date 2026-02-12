@@ -13,6 +13,7 @@ Turn an Android TV / Fire TV into a local party-game console and use phones as w
 - **TV-as-server:** Single source of truth lives on the TV.
 - **Shared reducer:** One reducer shared between host + controller.
 - **Time sync + preloading:** Helpers for timing-sensitive games and heavy assets.
+- **Session recovery:** Players automatically get their state back after refreshing or reconnecting.
 - **Dev workflow:** Iterate on the controller without constantly rebuilding the TV app.
 
 ## How It Works
@@ -78,8 +79,8 @@ export interface GameState extends IGameState {
 }
 
 // Only define your own game actions.
-// System actions (HYDRATE, PLAYER_JOINED, PLAYER_LEFT) are handled
-// automatically by createGameReducer — you never see them here.
+// System actions (HYDRATE, PLAYER_JOINED, PLAYER_LEFT, PLAYER_RECONNECTED,
+// PLAYER_REMOVED) are handled automatically by createGameReducer.
 export type GameAction = { type: "BUZZ" } | { type: "RESET" };
 
 export const initialState: GameState = {
@@ -169,8 +170,9 @@ export default function Controller() {
 
 ## Contracts (Read This Once)
 
-- **System actions are automatic:** The framework uses internal action types (`__HYDRATE__`, `__PLAYER_JOINED__`, `__PLAYER_LEFT__`) under the hood. These are handled automatically by `createGameReducer` -- you do **not** need to handle them in your reducer.
+- **System actions are automatic:** The framework uses internal action types (`__HYDRATE__`, `__PLAYER_JOINED__`, `__PLAYER_LEFT__`, `__PLAYER_RECONNECTED__`, `__PLAYER_REMOVED__`) under the hood. These are handled automatically by `createGameReducer` -- you do **not** need to handle them in your reducer.
 - **State updates:** The host broadcasts full state snapshots. The client applies them automatically via hydration.
+- **Session recovery is automatic:** When a player refreshes or reconnects, the library restores their previous player data automatically. Player IDs are stable across reconnections — the same device always gets the same `playerId`. Disconnected players are cleaned up after a timeout (default: 5 minutes).
 - **Dev-mode WebSocket:** if the controller is served from your laptop (Vite), `useGameClient()` will try to connect WS to the laptop by default. In dev, pass `url: "ws://TV_IP:8082"`.
 
 ## Dev Workflow (Controller on Laptop)
@@ -320,4 +322,4 @@ When you make changes to the library:
 ## Security Notes
 
 - The controller URL is reachable to anyone on the same LAN. Don’t run this on untrusted Wi‑Fi.
-- `JOIN` supports an optional `secret` field (protocol-level). Enforcement is up to your game/host logic.
+- `JOIN` requires a `secret` field — a persistent session token stored in the client's `localStorage`. The library uses it internally for session recovery. The raw secret is never broadcast to other clients; only a derived public `playerId` is shared in game state.

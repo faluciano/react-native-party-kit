@@ -5,6 +5,11 @@ Turn an Android TV / Fire TV into a local party-game console and use phones as w
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-green.svg)
 
+[![@couch-kit/host](https://img.shields.io/npm/dt/@couch-kit/host?label=%40couch-kit%2Fhost)](https://www.npmjs.com/package/@couch-kit/host)
+[![@couch-kit/client](https://img.shields.io/npm/dt/@couch-kit/client?label=%40couch-kit%2Fclient)](https://www.npmjs.com/package/@couch-kit/client)
+[![@couch-kit/core](https://img.shields.io/npm/dt/@couch-kit/core?label=%40couch-kit%2Fcore)](https://www.npmjs.com/package/@couch-kit/core)
+[![@couch-kit/cli](https://img.shields.io/npm/dt/@couch-kit/cli?label=%40couch-kit%2Fcli)](https://www.npmjs.com/package/@couch-kit/cli)
+
 ---
 
 ## ✨ Features
